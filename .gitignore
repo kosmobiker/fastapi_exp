@@ -1,6 +1,8 @@
 # .gitignore
 *.csv
 
+models/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -145,4 +147,3 @@ cython_debug/
 
 # FastAPI
 *.db
-/src/train/models/
