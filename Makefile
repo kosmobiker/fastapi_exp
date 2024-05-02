@@ -1,9 +1,6 @@
-.EXPORT_ALL_VARIABLES:
-
-PYTHONPATH = "$$PYTHONPATH:$PPYTHONPATHWD"
-
 .PHONY: setup
 setup:
+	export PYTHONPATH="$$PYTHONPATH:$$PWD"
 	pipenv	install
 	@echo $$PYTHONPATH
 	pipenv	shell
