@@ -1,6 +1,7 @@
 # .gitignore
 *.csv
-
+*.pkl
+*.txt
 models/
 
 # Byte-compiled / optimized / DLL files
