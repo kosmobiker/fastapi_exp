@@ -1,5 +1,6 @@
-import yaml
 from typing import Any
+
+import yaml
 
 
 def load_yaml_file(file_path: str) -> dict[str, Any]:

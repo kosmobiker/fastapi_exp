@@ -1,9 +1,7 @@
-import pandas as pd
 import numpy as np
-
-
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 COLS_TO_DROP = ["source", "device_fraud_count"]
 

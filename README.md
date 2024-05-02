@@ -21,3 +21,5 @@ https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022
 * `/status`: Returns the status of the API.
 * `/info`: Returns information about the API.
 * `/train`: Train new model with specified parameters
+
+

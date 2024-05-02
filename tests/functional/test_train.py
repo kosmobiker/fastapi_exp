@@ -1,14 +1,17 @@
 from datetime import datetime
 
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
-import lightgbm as lgb
 
-
-from src.train.train import get_data, split_dataframes
+from src.train.train import (
+    get_data,
+    lgbm_preprocessor_and_model,
+    logreg_preprocessor_and_model,
+    split_dataframes,
+)
 from src.train.utils import load_yaml_file
-from src.train.train import logreg_preprocessor_and_model, lgbm_preprocessor_and_model
 
 
 def test_returns_df_if_file_exists():
