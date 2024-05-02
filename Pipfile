@@ -15,6 +15,7 @@ matplotlib = "*"
 seaborn = "*"
 lightgbm = "*"
 joblib = "1.4.0"
+black = "*"
 
 [dev-packages]
 
