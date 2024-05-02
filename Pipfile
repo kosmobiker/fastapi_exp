@@ -16,6 +16,8 @@ seaborn = "*"
 lightgbm = "*"
 joblib = "1.4.0"
 black = "*"
+pylint = "*"
+pytest-cov = "*"
 
 [dev-packages]
 

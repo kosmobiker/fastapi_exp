@@ -5,6 +5,33 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 
+COLS_TO_DROP = ["source", "device_fraud_count"]
+
+COLS_MISSING_NEG1 = [
+    "prev_address_months_count",
+    "current_address_months_count",
+    "bank_months_count",
+    "session_length_in_minutes",
+    "device_distinct_emails_8w",
+]
+COLS_MISSING_NEG = ["intended_balcon_amount"]
+
+COLS_TO_FLAG = [
+    "prev_address_months_count",
+    "intended_balcon_amount",
+    "bank_months_count",
+]
+
+FILL_VALUE = -1
+
+OHE_COLS = [
+    "payment_type",
+    "employment_status",
+    "housing_status",
+    "device_os",
+    "device_distinct_emails_8w",
+]
+
 
 # Create ColumnDropper class
 class ColumnDropper(BaseEstimator, TransformerMixin):

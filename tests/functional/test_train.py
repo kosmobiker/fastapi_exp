@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -97,6 +99,7 @@ def test_returns_log_reg_model_and_test_metrics():
     assert isinstance(model, Pipeline)
     assert 0 <= recall <= 1, "Recall should be between 0 and 1."
     assert 0 <= roc_auc <= 1, "ROC AUC should be between 0 and 1."
+
 
 def test_returns_lgbm_preprocessor_model_and_test_metrics():
     # Given
