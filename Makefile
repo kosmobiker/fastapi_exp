@@ -3,9 +3,11 @@ setup:
 	export PYTHONPATH="$$PYTHONPATH:$$PWD"
 	pipenv	install
 	@echo $$PYTHONPATH
+	@echo $$PWD
 .PHONY: fmt
 fmt:
-	black	.
+	black	src/
+	black	tests/
 .PHONY: test
 test:
 	pytest	-v
