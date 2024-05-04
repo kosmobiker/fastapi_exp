@@ -3,7 +3,7 @@
 
 ## Data 
 
-Data was taken from this [page](https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022/data) as well as a code for training.
+Data was taken from this [page](https://www.kaggle.com/datasets/sgpjesus/bank-account-fraud-dataset-neurips-2022/data). Code for training was taken from this [notebook](https://www.kaggle.com/code/bolouki/bank-account-fraud-detection-eda-and-model).
 
 ## Model
 
@@ -11,7 +11,8 @@ Data was taken from this [page](https://www.kaggle.com/datasets/sgpjesus/bank-ac
 * 2. Split data into train, validate and test part
 * 3. Build a model (LogReg and LightGBM)
 * 4. Model must predict if transaction is fraud or not
-* 5. Save preprocessor and model
+* 5. Save preprocessor and model to the disk
+* 6. Add a record to the model registry with models' metadata
 
 ## Endpoints
 * `/models`: Returns list of available models and their properties
