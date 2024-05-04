@@ -31,7 +31,10 @@ jobs:
       run: make setup
     - name: Format code
       run: make fmt
-
+    - name: Some stuff
+      run: |
+        echo echo $PWD
+        echo $PYTHONPATH
     - name: Run tests
       run: make test
 
