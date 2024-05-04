@@ -3,7 +3,6 @@ setup:
 	export PYTHONPATH="$$PYTHONPATH:$$PWD"
 	pipenv	install
 	@echo $$PYTHONPATH
-	pipenv	shell
 .PHONY: fmt
 fmt:
 	black	.
@@ -17,4 +16,4 @@ coverage:
 	rm -rf htmlcov/
 .PHONY: train
 train:
-	python	src/train/train.py
+		pipenv run python	src/train/train.py
