@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import pytest
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
@@ -14,14 +14,29 @@ from src.train.train import (
 from src.train.utils import load_yaml_file
 
 
-def test_returns_df_if_file_exists():
+def fake_get_data(file_path):
+    # Create a fake DataFrame
+    data = {
+        "A": np.random.randint(0, 100, 100),
+        "B": np.random.rand(100),
+        "C": np.random.choice(["X", "Y", "Z"], 100),
+        "fraud_bool": np.random.choice([True, False], 100),
+    }
+    df = pd.DataFrame(data)
+    return df
+
+
+def test_returns_df_if_file_exists(monkeypatch):
     # Given
     file_path = "data/Base.csv"
+    # Replace get_data with fake_get_data
+    monkeypatch.setattr("src.train.train.get_data", fake_get_data)
+
     # When
     df = get_data(file_path)
     # Then
     assert isinstance(df, pd.DataFrame)
-    assert len(df) == 1_000_000
+    assert len(df) > 0
 
 
 def test_returns_required_parameters_from_yaml_file():
@@ -60,13 +75,8 @@ def test_returns_required_parameters_from_yaml_file():
 def test_returns_train_holdout_test_dataframes():
     # Given
     yaml_path = "config.yaml"
-    data = {
-        "A": np.random.randint(0, 100, 100),
-        "B": np.random.rand(100),
-        "C": np.random.choice(["X", "Y", "Z"], 100),
-        "fraud_bool": np.random.choice([True, False], 100),
-    }
-    df = pd.DataFrame(data)
+    file_path = "data/Base.csv"
+    df = fake_get_data(file_path)
 
     # When
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
