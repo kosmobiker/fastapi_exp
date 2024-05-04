@@ -37,9 +37,6 @@ PATH_TO_DATA = load_yaml_file("config.yaml")["data_path"]
 SEED = load_yaml_file("config.yaml")["seed"]
 
 
-
-
-
 def split_dataframes(
     df: pd.DataFrame, yaml_data: dict
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
