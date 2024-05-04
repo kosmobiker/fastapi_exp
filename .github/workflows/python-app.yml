@@ -33,7 +33,7 @@ jobs:
       run: make fmt
     - name: Run tests
       run:  |
-        export PYTHONPATH=:$PWD"
+        export PYTHONPATH="$PYTHONPATH:$PWD"
         make test
     - name: Run coverage
       run: make coverage
