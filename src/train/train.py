@@ -72,7 +72,8 @@ def split_dataframes(
 # Recall @ 5% FPR
 def recall_at_5percent_fpr(y_true: np.array, y_pred_proba: np.array) -> np.array:
     """
-    Calculate recall at 5% false positive rate. Used in fraud detection as metrics.
+    Calculate recall at 5% false positive rate.
+    Used in fraud detection as metrics.
     """
     fpr, tpr, _ = roc_curve(y_true, y_pred_proba)
     target_fpr = 0.05
@@ -88,7 +89,8 @@ def logreg_preprocessor_and_model(
     params: dict = {"logisticregression__C": [1]},
 ) -> tuple[Pipeline, float, float]:
     """
-    Train a logistic regression model using grid search and custom scoring function.
+    Train a logistic regression model using
+    grid search and custom scoring function.
     """
     # Create the preprocessor and model for logistic regression
     logreg_preprocessor = make_pipeline(
@@ -233,10 +235,10 @@ if __name__ == "__main__":
     joblib_dump(lgbm_model, loc, "lgbm_model")
 
     # Results
-    print(f"\nLogistic Regression model trained successfully!")
+    print("\nLogistic Regression model trained successfully!")
     print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
     print(f"\nTest roc_auc_score: {logreg_roc_auc}")
 
-    print(f"\nLightGBM model trained successfully!")
+    print("\nLightGBM model trained successfully!")
     print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
     print(f"\nTest roc_auc_score: {lgbm_roc_auc}")

@@ -137,7 +137,8 @@ class Merger(BaseEstimator, TransformerMixin):
         return X_transformed
 
 
-# Create CategoricalConverter class, converting dtype of categorical features to 'category'
+# Create CategoricalConverter class,
+# converting dtype of categorical features to 'category'
 class CategoricalConverter(BaseEstimator, TransformerMixin):
     def __init__(self, cat_columns):
         self.cat_columns = cat_columns

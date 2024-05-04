@@ -19,6 +19,7 @@ black = "*"
 pylint = "*"
 pytest-cov = "*"
 pytest = "*"
+flake8 = "*"
 
 [dev-packages]
 
