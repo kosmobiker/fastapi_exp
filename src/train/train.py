@@ -31,20 +31,13 @@ from src.train.transform import (
     MissingFlagger,
     MissingValueFiller,
 )
-from src.train.utils import load_yaml_file
+from src.train.utils import load_yaml_file, get_data
 
 PATH_TO_DATA = load_yaml_file("config.yaml")["data_path"]
 SEED = load_yaml_file("config.yaml")["seed"]
 
 
-def get_data(path: str) -> pd.DataFrame:
-    """
-    Load data from a CSV file.
-    """
-    if os.path.exists(path):
-        return pd.read_csv(path)
-    else:
-        raise FileNotFoundError(f"File not found: {path}")
+
 
 
 def split_dataframes(

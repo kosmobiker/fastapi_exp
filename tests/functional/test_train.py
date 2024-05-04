@@ -6,37 +6,52 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 from src.train.train import (
-    get_data,
     lgbm_preprocessor_and_model,
     logreg_preprocessor_and_model,
     split_dataframes,
 )
-from src.train.utils import load_yaml_file
+from src.train.utils import load_yaml_file, get_data
 
 
-def fake_get_data(file_path):
+def fake_get_data(n: int=100):
     # Create a fake DataFrame
     data = {
-        "A": np.random.randint(0, 100, 100),
-        "B": np.random.rand(100),
-        "C": np.random.choice(["X", "Y", "Z"], 100),
-        "fraud_bool": np.random.choice([True, False], 100),
+    'fraud_bool': np.random.randint(0, 2, size=n),
+    'income': np.random.uniform(20000, 150000, size=n),
+    'name_email_similarity': np.random.uniform(0, 1, size=n),
+    'prev_address_months_count': np.random.randint(1, 61, size=n),
+    'current_address_months_count': np.random.randint(1, 61, size=n),
+    'customer_age': np.random.randint(18, 100, size=n),
+    'days_since_request': np.random.uniform(0, 365, size=n),
+    'intended_balcon_amount': np.random.uniform(100, 10000, size=n),
+    'payment_type': np.random.choice(['Credit Card', 'Debit Card', 'Cash'], size=n),
+    'zip_count_4w': np.random.randint(1, 100, size=n),
+    'velocity_6h': np.random.uniform(0, 100, size=n),
+    'velocity_24h': np.random.uniform(0, 100, size=n),
+    'velocity_4w': np.random.uniform(0, 100, size=n),
+    'bank_branch_count_8w': np.random.randint(1, 11, size=n),
+    'date_of_birth_distinct_emails_4w': np.random.randint(1, 11, size=n),
+    'employment_status': np.random.choice(['Employed', 'Unemployed', 'Self-Employed'], size=n),
+    'credit_risk_score': np.random.randint(300, 850, size=n),
+    'email_is_free': np.random.randint(0, 2, size=n),
+    'housing_status': np.random.choice(['Own', 'Rent', 'Mortgage'], size=n),
+    'phone_home_valid': np.random.randint(0, 2, size=n),
+    'phone_mobile_valid': np.random.randint(0, 2, size=n),
+    'bank_months_count': np.random.randint(1, 121, size=n),
+    'has_other_cards': np.random.randint(0, 2, size=n),
+    'proposed_credit_limit': np.random.uniform(1000, 50000, size=n),
+    'foreign_request': np.random.randint(0, 2, size=n),
+    'source': np.random.choice(['Online', 'In-Store', 'Phone'], size=n),
+    'session_length_in_minutes': np.random.uniform(1, 600, size=n),
+    'device_os': np.random.choice(['iOS', 'Android', 'Windows'], size=n),
+    'keep_alive_session': np.random.randint(0, 2, size=n),
+    'device_distinct_emails_8w': np.random.randint(1, 11, size=n),
+    'device_fraud_count': np.random.randint(0, 11, size=n),
+    'month': np.random.randint(1, 13, size=n)
     }
+
     df = pd.DataFrame(data)
     return df
-
-
-def test_returns_df_if_file_exists(monkeypatch):
-    # Given
-    file_path = "data/Base.csv"
-    # Replace get_data with fake_get_data
-    monkeypatch.setattr("src.train.train.get_data", fake_get_data)
-
-    # When
-    df = get_data(file_path)
-    # Then
-    assert isinstance(df, pd.DataFrame)
-    assert len(df) > 0
 
 
 def test_returns_required_parameters_from_yaml_file():
@@ -75,8 +90,7 @@ def test_returns_required_parameters_from_yaml_file():
 def test_returns_train_holdout_test_dataframes():
     # Given
     yaml_path = "config.yaml"
-    file_path = "data/Base.csv"
-    df = fake_get_data(file_path)
+    df = fake_get_data(1000)
 
     # When
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
@@ -96,11 +110,10 @@ def test_returns_train_holdout_test_dataframes():
 
 def test_returns_log_reg_model_and_test_metrics():
     # Given
-    file_path = "data/Base.csv"
     yaml_path = "config.yaml"
 
     # When
-    df = get_data(file_path).sample(1000)
+    df = fake_get_data(1000)
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
         df, load_yaml_file(yaml_path)
     )
@@ -116,11 +129,10 @@ def test_returns_log_reg_model_and_test_metrics():
 
 def test_returns_lgbm_preprocessor_model_and_test_metrics():
     # Given
-    file_path = "data/Base.csv"
     yaml_path = "config.yaml"
 
     # When
-    df = get_data(file_path).sample(1000)
+    df = fake_get_data()
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
         df, load_yaml_file(yaml_path)
     )
