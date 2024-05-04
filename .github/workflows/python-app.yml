@@ -29,8 +29,6 @@ jobs:
         pip install pipenv
     - name: Setup application
       run: make setup
-    - name: Verification
-      run: ls -la 
     - name: Format code
       run: make fmt
 

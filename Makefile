@@ -6,14 +6,14 @@ setup:
 	@echo $$PWD
 .PHONY: fmt
 fmt:
-	black	src/
-	black	tests/
+	pipenv run black	src/
+	pipenv run black	tests/
 .PHONY: test
 test:
-	pytest	-v
+	pipenv run pytest	-v
 .PHONY: coverage
 coverage:
-	pytest	--cov=src
+	pipenv run pytest	--cov=src
 	rm -f .coverage*
 	rm -rf htmlcov/
 .PHONY: train
