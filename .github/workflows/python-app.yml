@@ -36,4 +36,6 @@ jobs:
         export PYTHONPATH="$PYTHONPATH:$PWD"
         make test
     - name: Run coverage
-      run: make coverage
+      run:  |
+        export PYTHONPATH="$PYTHONPATH:$PWD"
+        make coverage
