@@ -8,6 +8,8 @@ fastapi = "*"
 requests = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 ipykernel = "*"
+sqlalchemy = "*"
+psycopg2-binary = "*"
 pandas = "*"
 scikit-learn = "*"
 numpy = "*"
@@ -20,6 +22,7 @@ pylint = "*"
 pytest-cov = "*"
 pytest = "*"
 flake8 = "*"
+sqlalchemy-utils = "*"
 
 [dev-packages]
 

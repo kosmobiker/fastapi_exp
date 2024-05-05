@@ -1,5 +1,4 @@
 import unittest
-import yaml
 from unittest.mock import patch, mock_open
 import pandas as pd
 from src.train.utils import get_data, load_yaml_file
