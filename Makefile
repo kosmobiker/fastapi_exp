@@ -4,6 +4,10 @@ setup:
 	pipenv	install
 	@echo $$PYTHONPATH
 	@echo $$PWD
+.PHONY: docker
+docker:
+	docker build -t my_postgres_image .
+	docker run -d -p 5432:5432 --name my_postgres_container my_postgres_image
 .PHONY: fmt
 fmt:
 	pipenv run black	src/
