@@ -209,14 +209,16 @@ def lgbm_preprocessor_and_model(
 def joblib_dump(object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
     joblib.dump(object_to_dump, location)
 
+
 def train_model(
-        model_type: str,
-        model_name: str, 
-        X_train: pd.DataFrame,
-        X_test: pd.DataFrame,
-        y_train: pd.Series,
-        y_test: pd.Series,
-        params: dict | None = None):
+    model_type: str,
+    model_name: str,
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+    params: dict | None = None,
+):
     if model_type == "logreg":
         log_reg_model_id = uuid4()
         log_reg_path = f"./models/{log_reg_model_id}.pkl"
@@ -288,8 +290,8 @@ def train_model(
         print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
         print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
     else:
-        ValueError("Please provide a valid model type.")
-       
+        print("Please provide a valid model type.")
+
 
 if __name__ == "__main__":
     # Parse arguments
@@ -318,5 +320,3 @@ if __name__ == "__main__":
     )
     # Train model
     train_model(args.model_type, X_train, X_test, y_train, y_test, args.params)
-
-

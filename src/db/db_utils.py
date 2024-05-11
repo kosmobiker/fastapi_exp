@@ -92,5 +92,3 @@ def insert_values_into_table(
     with engine.connect() as connection:
         connection.execute(stmt)
         connection.commit()
-
-

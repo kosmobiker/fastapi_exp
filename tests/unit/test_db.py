@@ -1,7 +1,11 @@
 import unittest
 from unittest.mock import Mock, patch
 from sqlalchemy import create_engine, inspect
-from src.db.db_utils import _create_schema, crete_database_schemas_tables, insert_values_into_table
+from src.db.db_utils import (
+    _create_schema,
+    crete_database_schemas_tables,
+    insert_values_into_table,
+)
 from sqlalchemy_utils.functions import database_exists
 from datetime import datetime
 from sqlalchemy import create_engine, MetaData, Table, select, delete
@@ -87,4 +91,3 @@ class TestDatabase:
             # Delete the inserted row
             delete_stmt = delete(table).where(table.c.model_id == values["model_id"])
             conn.execute(delete_stmt)
-

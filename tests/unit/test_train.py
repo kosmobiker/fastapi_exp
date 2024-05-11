@@ -52,9 +52,10 @@ class TestLoadYamlFile(unittest.TestCase):
         os.unlink(invalid_yaml_file.name)
         self.assertIsNone(result)
 
+
 class TestTrainer:
     def test_fake_get_data(self):
         df = _fake_get_data(1000)
         assert isinstance(df, pd.DataFrame)
         assert df.shape == (1000, 32)
-        assert df['income'].dtype == 'float'
+        assert df["income"].dtype == "float"
