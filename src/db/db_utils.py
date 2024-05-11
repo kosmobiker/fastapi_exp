@@ -5,7 +5,7 @@ from sqlalchemy import String, DateTime, Float, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from typing import Any
 
-CONNECTION_STING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
+CONNECTION_STRING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
 SCHEMA = "ml_schema"
 TABLE_LIST = ["models"]
 

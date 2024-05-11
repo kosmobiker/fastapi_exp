@@ -1,5 +1,7 @@
-import os
+import argparse
 from datetime import datetime
+import json
+from uuid import uuid4
 
 import joblib
 import lightgbm as lgb
@@ -32,6 +34,7 @@ from src.train.transform import (
     MissingValueFiller,
 )
 from src.train.utils import load_yaml_file, get_data
+from src.db.db_utils import insert_values_into_table, CONNECTION_STRING, SCHEMA
 
 PATH_TO_DATA = load_yaml_file("config.yaml")["data_path"]
 SEED = load_yaml_file("config.yaml")["seed"]
@@ -76,7 +79,7 @@ def logreg_preprocessor_and_model(
     X_test: pd.DataFrame,
     y_train: pd.Series,
     y_test: pd.Series,
-    params: dict = {"logisticregression__C": [1]},
+    params: dict | None = None,
 ) -> tuple[Pipeline, float, float]:
     """
     Train a logistic regression model using
@@ -103,7 +106,8 @@ def logreg_preprocessor_and_model(
             ("logisticregression", logreg_model),
         ]
     )
-
+    if params is None:
+        params = {"logisticregression__C": [1]}
     # Create StratifiedKFold object
     stratified_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
 
@@ -185,50 +189,92 @@ def lgbm_preprocessor_and_model(
 
 
 def joblib_dump(
-    object_to_dump: Pipeline | lgb.Booster, location: str, filename: str
-) -> None:
-    extension = "pkl" if isinstance(object_to_dump, Pipeline) else "txt"
-    joblib.dump(
-        object_to_dump,
-        f'{location}/{filename}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.{extension}',
-    )
+    object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
+    joblib.dump(object_to_dump,location)
 
 
 if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Train a model.')
+    parser.add_argument('--model_type', type=str, default='logreg', choices=['logreg', 'lightgbm'], help='Type of model to train.')
+    parser.add_argument('--model_name', type=str, default="TestFraudModel", help='Model ID.')
+    parser.add_argument('--params', type=json.loads, default=None, help='Parameters for training the model.')
+    args = parser.parse_args()
+    params = args.params
+    # Load data
     df = get_data(PATH_TO_DATA)
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
         df, load_yaml_file("config.yaml")
     )
-    # LogReg
-    logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
-        X_train, X_test, y_train, y_test
-    )
-    param_grid = {"logisticregression__C": [0.01, 0.1, 1, 10]}
 
-    # LightGBM
-    params = {
-        "objective": "binary",
-        "metric": "binary_error",
-        "num_leaves": 17,
-        "learning_rate": 0.05,
-        "verbose": -1,
-        "early_stopping_rounds": 250,
-    }
-    lgbm_preprocessor, lgbm_model, lgbm_recall, lgbm_roc_auc = (
-        lgbm_preprocessor_and_model(X_train, X_test, y_train, y_test, params)
-    )
+    if args.model_type == 'logreg':
+        log_reg_model_id = uuid4()
+        log_reg_path = f"./models/{log_reg_model_id}.pkl"
+        logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
+            X_train, X_test, y_train, y_test, params
+        )
+        values_to_insert_logreg = {
+            "model_id": log_reg_model_id,
+            "train_date": datetime.now(),
+            "model_name": "TestFraudModel",
+            "model_type": "Logistic Regression",
+            "hyperparameters" : params,
+            "roc_auc_train": None,
+            "recall_train": None,
+            "roc_auc_test": logreg_roc_auc,
+            "recall_test" : logreg_recall,
+            "model_path" : log_reg_path,  
+        }
 
-    # Dump models
-    loc = "./models"
-    joblib_dump(logreg_model, loc, "logreg_pipeline")
-    joblib_dump(lgbm_preprocessor, loc, "lgbm_preprocessor")
-    joblib_dump(lgbm_model, loc, "lgbm_model")
+        # Insert values into the models table
+        insert_values_into_table(
+            connection_string=CONNECTION_STRING, 
+            schema_name=SCHEMA, 
+            table_name='models', 
+            values=values_to_insert_logreg
+            )
+        
+        # Save the model to local disk
+        joblib_dump(logreg_model, log_reg_path)
 
-    # Results
-    print("\nLogistic Regression model trained successfully!")
-    print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
-    print(f"\nTest roc_auc_score: {logreg_roc_auc}")
+        #  Results
+        print("\nLogistic Regression model trained successfully!")
+        print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
+        print(f"\nTest roc_auc_score: {logreg_roc_auc}")
+    
+    elif args.model_type == 'lightgbm':
+        lgbm_model_id = uuid4()
+        lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
+        lgbm_model_path = f"./models/{lgbm_model_id}_model.txt"
 
-    print("\nLightGBM model trained successfully!")
-    print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
-    print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
+        lgbm_preprocessor, lgbm_model, lgbm_recall, lgbm_roc_auc = (
+            lgbm_preprocessor_and_model(X_train, X_test, y_train, y_test, params)
+        )
+        values_to_insert_lightgbm = {
+            "model_id": lgbm_model_id,
+            "train_date": datetime.now(),
+            "model_name": "TestFraudModel",
+            "model_type": "LightGBM",
+            "hyperparameters" : params,
+            "roc_auc_train": None,
+            "recall_train": None,
+            "roc_auc_test": lgbm_roc_auc,
+            "recall_test" : lgbm_recall,
+            "model_path" : lgbm_model_path,  
+        }
+        # Insert values into the models table
+        insert_values_into_table(
+            connection_string=CONNECTION_STRING, 
+            schema_name=SCHEMA, 
+            table_name='models', 
+            values=values_to_insert_lightgbm
+            )
+        # Save the model to local disk
+        joblib_dump(lgbm_preprocessor, lgbm_preprocessor_path)
+        joblib_dump(lgbm_model, lgbm_model_path)
+
+        print("\nLightGBM model trained successfully!")
+        print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
+        print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
+    else:
+        ValueError("Please provide a valid model type.")

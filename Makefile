@@ -22,4 +22,4 @@ coverage:
 	rm -rf htmlcov/
 .PHONY: train
 train:
-		pipenv run python	src/train/train.py
+		pipenv run python	src/train/trainer.py

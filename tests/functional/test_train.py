@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-from src.train.train import (
+from src.train.trainer import (
     lgbm_preprocessor_and_model,
     logreg_preprocessor_and_model,
     split_dataframes,
