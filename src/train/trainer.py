@@ -315,4 +315,6 @@ if __name__ == "__main__":
         df, load_yaml_file("config.yaml")
     )
     # Train model
-    train_model(args.model_type, args.model_name, X_train, X_test, y_train, y_test, args.params)
+    train_model(
+        args.model_type, args.model_name, X_train, X_test, y_train, y_test, args.params
+    )
