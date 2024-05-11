@@ -1,3 +1,17 @@
+"""
+This module contains functions for training and evaluating machine learning models for fraud detection.
+
+The module includes the following functions:
+- split_dataframes: Split the data into training, holdout, and test sets.
+- recall_at_5percent_fpr: Calculate recall at 5% false positive rate.
+- logreg_preprocessor_and_model: Train a logistic regression model using grid search and custom scoring function.
+- lgbm_preprocessor_and_model: Train a LightGBM model using custom scoring function.
+- joblib_dump: Save an object to disk using joblib.
+
+The module also includes a main block that parses command line arguments, loads the data, trains the specified model, and saves the trained model to disk.
+
+Note: This code assumes the presence of other modules and functions imported from external files.
+"""
 import argparse
 from datetime import datetime
 import json
@@ -161,13 +175,16 @@ def lgbm_preprocessor_and_model(
         Merger(),
         CategoricalConverter(OHE_COLS),
     )
+    
     # Preprocess the data
     X_train_processed = lgbm_preprocessor.fit_transform(X_train)
     X_test_processed = lgbm_preprocessor.transform(X_test)
+
     # Train/validation split with stratified sampling
     X_train_lgbm, X_val_lgbm, y_train_lgbm, y_val_lgbm = train_test_split(
         X_train_processed, y_train, test_size=0.2, random_state=SEED, stratify=y_train
     )
+    
     # Create dataset for LGBM
     lgb_train = lgb.Dataset(X_train_lgbm, y_train_lgbm)
     lgb_val = lgb.Dataset(X_val_lgbm, y_val_lgbm)
@@ -188,17 +205,29 @@ def lgbm_preprocessor_and_model(
     return lgbm_preprocessor, model, recall_test, roc_auc_test
 
 
-def joblib_dump(
-    object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
-    joblib.dump(object_to_dump,location)
+def joblib_dump(object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
+    joblib.dump(object_to_dump, location)
 
 
 if __name__ == "__main__":
     # Parse arguments
-    parser = argparse.ArgumentParser(description='Train a model.')
-    parser.add_argument('--model_type', type=str, default='logreg', choices=['logreg', 'lightgbm'], help='Type of model to train.')
-    parser.add_argument('--model_name', type=str, default="TestFraudModel", help='Model ID.')
-    parser.add_argument('--params', type=json.loads, default=None, help='Parameters for training the model.')
+    parser = argparse.ArgumentParser(description="Train a model.")
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="logreg",
+        choices=["logreg", "lightgbm"],
+        help="Type of model to train.",
+    )
+    parser.add_argument(
+        "--model_name", type=str, default="TestFraudModel", help="Model ID."
+    )
+    parser.add_argument(
+        "--params",
+        type=json.loads,
+        default=None,
+        help="Parameters for training the model.",
+    )
     args = parser.parse_args()
     params = args.params
     # Load data
@@ -207,7 +236,7 @@ if __name__ == "__main__":
         df, load_yaml_file("config.yaml")
     )
 
-    if args.model_type == 'logreg':
+    if args.model_type == "logreg":
         log_reg_model_id = uuid4()
         log_reg_path = f"./models/{log_reg_model_id}.pkl"
         logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
@@ -218,22 +247,22 @@ if __name__ == "__main__":
             "train_date": datetime.now(),
             "model_name": "TestFraudModel",
             "model_type": "Logistic Regression",
-            "hyperparameters" : params,
+            "hyperparameters": params,
             "roc_auc_train": None,
             "recall_train": None,
             "roc_auc_test": logreg_roc_auc,
-            "recall_test" : logreg_recall,
-            "model_path" : log_reg_path,  
+            "recall_test": logreg_recall,
+            "model_path": log_reg_path,
         }
 
         # Insert values into the models table
         insert_values_into_table(
-            connection_string=CONNECTION_STRING, 
-            schema_name=SCHEMA, 
-            table_name='models', 
-            values=values_to_insert_logreg
-            )
-        
+            connection_string=CONNECTION_STRING,
+            schema_name=SCHEMA,
+            table_name="models",
+            values=values_to_insert_logreg,
+        )
+
         # Save the model to local disk
         joblib_dump(logreg_model, log_reg_path)
 
@@ -241,12 +270,13 @@ if __name__ == "__main__":
         print("\nLogistic Regression model trained successfully!")
         print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
         print(f"\nTest roc_auc_score: {logreg_roc_auc}")
-    
-    elif args.model_type == 'lightgbm':
+
+    elif args.model_type == "lightgbm":
         lgbm_model_id = uuid4()
         lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
         lgbm_model_path = f"./models/{lgbm_model_id}_model.txt"
 
+        # Train the LightGBM model
         lgbm_preprocessor, lgbm_model, lgbm_recall, lgbm_roc_auc = (
             lgbm_preprocessor_and_model(X_train, X_test, y_train, y_test, params)
         )
@@ -255,20 +285,20 @@ if __name__ == "__main__":
             "train_date": datetime.now(),
             "model_name": "TestFraudModel",
             "model_type": "LightGBM",
-            "hyperparameters" : params,
+            "hyperparameters": params,
             "roc_auc_train": None,
             "recall_train": None,
             "roc_auc_test": lgbm_roc_auc,
-            "recall_test" : lgbm_recall,
-            "model_path" : lgbm_model_path,  
+            "recall_test": lgbm_recall,
+            "model_path": lgbm_model_path,
         }
         # Insert values into the models table
         insert_values_into_table(
-            connection_string=CONNECTION_STRING, 
-            schema_name=SCHEMA, 
-            table_name='models', 
-            values=values_to_insert_lightgbm
-            )
+            connection_string=CONNECTION_STRING,
+            schema_name=SCHEMA,
+            table_name="models",
+            values=values_to_insert_lightgbm,
+        )
         # Save the model to local disk
         joblib_dump(lgbm_preprocessor, lgbm_preprocessor_path)
         joblib_dump(lgbm_model, lgbm_model_path)

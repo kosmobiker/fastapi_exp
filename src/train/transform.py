@@ -1,3 +1,25 @@
+"""
+This module contains classes for data transformation in a machine learning pipeline.
+
+Classes:
+- ColumnDropper: Drops specified columns from a DataFrame.
+- MissingAsNan: Converts missing values represented as -1 or negative values to NaN.
+- MissingFlagger: Flags missing values in specified columns as 1 and non-missing values as 0.
+- MissingValueFiller: Fills missing values in a DataFrame with a specified fill value.
+- IncomeRounder: Rounds the 'income' column in a DataFrame to one decimal place.
+- Merger: Merges categories of categorical features in a DataFrame.
+- CategoricalConverter: Converts the data type of categorical features in a DataFrame to 'category'.
+- CustomOneHotEncoder: Performs one-hot encoding on specified columns in a DataFrame.
+- CustomScaler: Standardizes specified columns in a DataFrame.
+
+Constants:
+- COLS_TO_DROP: List of columns to be dropped from the DataFrame.
+- COLS_MISSING_NEG1: List of columns with missing values represented as -1.
+- COLS_MISSING_NEG: List of columns with missing values represented as negative values.
+- COLS_TO_FLAG: List of columns to flag missing values.
+- FILL_VALUE: Value used to fill missing values.
+- OHE_COLS: List of columns to be one-hot encoded.
+"""
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
