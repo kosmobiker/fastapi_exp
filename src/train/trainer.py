@@ -12,6 +12,7 @@ The module also includes a main block that parses command line arguments, loads 
 
 Note: This code assumes the presence of other modules and functions imported from external files.
 """
+
 import argparse
 from datetime import datetime
 import json
@@ -175,7 +176,7 @@ def lgbm_preprocessor_and_model(
         Merger(),
         CategoricalConverter(OHE_COLS),
     )
-    
+
     # Preprocess the data
     X_train_processed = lgbm_preprocessor.fit_transform(X_train)
     X_test_processed = lgbm_preprocessor.transform(X_test)
@@ -184,7 +185,7 @@ def lgbm_preprocessor_and_model(
     X_train_lgbm, X_val_lgbm, y_train_lgbm, y_val_lgbm = train_test_split(
         X_train_processed, y_train, test_size=0.2, random_state=SEED, stratify=y_train
     )
-    
+
     # Create dataset for LGBM
     lgb_train = lgb.Dataset(X_train_lgbm, y_train_lgbm)
     lgb_val = lgb.Dataset(X_val_lgbm, y_val_lgbm)
