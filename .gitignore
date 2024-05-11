@@ -2,7 +2,6 @@
 *.csv
 *.pkl
 *.txt
-models/
 sandbox/
 
 # Byte-compiled / optimized / DLL files

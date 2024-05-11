@@ -12,9 +12,11 @@ The module also includes a main block that parses command line arguments, loads 
 
 Note: This code assumes the presence of other modules and functions imported from external files.
 """
+
 import argparse
 from datetime import datetime
 import json
+import os
 from uuid import uuid4
 
 import joblib
@@ -136,7 +138,6 @@ def logreg_preprocessor_and_model(
     # Perform grid search
     grid_search.fit(X_train, y_train)
     best_model = grid_search.best_estimator_
-
     # Make probability predictions on test
     y_pred_test_proba = best_model.predict_proba(X_test)[:, 1]
 
@@ -175,7 +176,7 @@ def lgbm_preprocessor_and_model(
         Merger(),
         CategoricalConverter(OHE_COLS),
     )
-    
+
     # Preprocess the data
     X_train_processed = lgbm_preprocessor.fit_transform(X_train)
     X_test_processed = lgbm_preprocessor.transform(X_test)
@@ -184,7 +185,7 @@ def lgbm_preprocessor_and_model(
     X_train_lgbm, X_val_lgbm, y_train_lgbm, y_val_lgbm = train_test_split(
         X_train_processed, y_train, test_size=0.2, random_state=SEED, stratify=y_train
     )
-    
+
     # Create dataset for LGBM
     lgb_train = lgb.Dataset(X_train_lgbm, y_train_lgbm)
     lgb_val = lgb.Dataset(X_val_lgbm, y_val_lgbm)
@@ -205,8 +206,87 @@ def lgbm_preprocessor_and_model(
     return lgbm_preprocessor, model, recall_test, roc_auc_test
 
 
-def joblib_dump(object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
-    joblib.dump(object_to_dump, location)
+def train_model(
+    model_type: str,
+    model_name: str,
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+    params: dict | None = None,
+):
+    if model_type == "logreg":
+        log_reg_model_id = uuid4()
+        log_reg_path = f"./models/{log_reg_model_id}.pkl"
+        logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
+            X_train, X_test, y_train, y_test, params
+        )
+        values_to_insert_logreg = {
+            "model_id": log_reg_model_id,
+            "train_date": datetime.now(),
+            "model_name": model_name,
+            "model_type": "Logistic Regression",
+            "hyperparameters": params,
+            "roc_auc_train": None,
+            "recall_train": None,
+            "roc_auc_test": logreg_roc_auc,
+            "recall_test": logreg_recall,
+            "model_path": log_reg_path,
+        }
+
+        # Insert values into the models table
+        insert_values_into_table(
+            connection_string=CONNECTION_STRING,
+            schema_name=SCHEMA,
+            table_name="models",
+            values=values_to_insert_logreg,
+        )
+        print("Current working directory:", os.getcwd())
+        # Save the model to local disk
+        joblib.dump(logreg_model, log_reg_path)
+
+        #  Results
+        print("\nLogistic Regression model trained successfully!")
+        print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
+        print(f"\nTest roc_auc_score: {logreg_roc_auc}")
+
+    elif model_type == "lightgbm":
+        lgbm_model_id = uuid4()
+        lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
+        lgbm_model_path = f"./models/{lgbm_model_id}_model.txt"
+
+        # Train the LightGBM model
+        lgbm_preprocessor, lgbm_model, lgbm_recall, lgbm_roc_auc = (
+            lgbm_preprocessor_and_model(X_train, X_test, y_train, y_test, params)
+        )
+        values_to_insert_lightgbm = {
+            "model_id": lgbm_model_id,
+            "train_date": datetime.now(),
+            "model_name": model_name,
+            "model_type": "LightGBM",
+            "hyperparameters": params,
+            "roc_auc_train": None,
+            "recall_train": None,
+            "roc_auc_test": lgbm_roc_auc,
+            "recall_test": lgbm_recall,
+            "model_path": lgbm_model_path,
+        }
+        # Insert values into the models table
+        insert_values_into_table(
+            connection_string=CONNECTION_STRING,
+            schema_name=SCHEMA,
+            table_name="models",
+            values=values_to_insert_lightgbm,
+        )
+        # Save the model to local disk
+        joblib.dump(lgbm_preprocessor, lgbm_preprocessor_path)
+        joblib.dump(lgbm_model, lgbm_model_path)
+
+        print("\nLightGBM model trained successfully!")
+        print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
+        print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
+    else:
+        print("Please provide a valid model type.")
 
 
 if __name__ == "__main__":
@@ -229,82 +309,12 @@ if __name__ == "__main__":
         help="Parameters for training the model.",
     )
     args = parser.parse_args()
-    params = args.params
     # Load data
     df = get_data(PATH_TO_DATA)
     X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
         df, load_yaml_file("config.yaml")
     )
-
-    if args.model_type == "logreg":
-        log_reg_model_id = uuid4()
-        log_reg_path = f"./models/{log_reg_model_id}.pkl"
-        logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
-            X_train, X_test, y_train, y_test, params
-        )
-        values_to_insert_logreg = {
-            "model_id": log_reg_model_id,
-            "train_date": datetime.now(),
-            "model_name": "TestFraudModel",
-            "model_type": "Logistic Regression",
-            "hyperparameters": params,
-            "roc_auc_train": None,
-            "recall_train": None,
-            "roc_auc_test": logreg_roc_auc,
-            "recall_test": logreg_recall,
-            "model_path": log_reg_path,
-        }
-
-        # Insert values into the models table
-        insert_values_into_table(
-            connection_string=CONNECTION_STRING,
-            schema_name=SCHEMA,
-            table_name="models",
-            values=values_to_insert_logreg,
-        )
-
-        # Save the model to local disk
-        joblib_dump(logreg_model, log_reg_path)
-
-        #  Results
-        print("\nLogistic Regression model trained successfully!")
-        print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
-        print(f"\nTest roc_auc_score: {logreg_roc_auc}")
-
-    elif args.model_type == "lightgbm":
-        lgbm_model_id = uuid4()
-        lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
-        lgbm_model_path = f"./models/{lgbm_model_id}_model.txt"
-
-        # Train the LightGBM model
-        lgbm_preprocessor, lgbm_model, lgbm_recall, lgbm_roc_auc = (
-            lgbm_preprocessor_and_model(X_train, X_test, y_train, y_test, params)
-        )
-        values_to_insert_lightgbm = {
-            "model_id": lgbm_model_id,
-            "train_date": datetime.now(),
-            "model_name": "TestFraudModel",
-            "model_type": "LightGBM",
-            "hyperparameters": params,
-            "roc_auc_train": None,
-            "recall_train": None,
-            "roc_auc_test": lgbm_roc_auc,
-            "recall_test": lgbm_recall,
-            "model_path": lgbm_model_path,
-        }
-        # Insert values into the models table
-        insert_values_into_table(
-            connection_string=CONNECTION_STRING,
-            schema_name=SCHEMA,
-            table_name="models",
-            values=values_to_insert_lightgbm,
-        )
-        # Save the model to local disk
-        joblib_dump(lgbm_preprocessor, lgbm_preprocessor_path)
-        joblib_dump(lgbm_model, lgbm_model_path)
-
-        print("\nLightGBM model trained successfully!")
-        print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
-        print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
-    else:
-        ValueError("Please provide a valid model type.")
+    # Train model
+    train_model(
+        args.model_type, args.model_name, X_train, X_test, y_train, y_test, args.params
+    )

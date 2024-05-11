@@ -1,14 +1,23 @@
 from datetime import datetime
+from typing import Any
 import pytest
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
+from sqlalchemy import MetaData, Table, create_engine, delete, select
 
+from src.db.db_utils import (
+    CONNECTION_STRING,
+    SCHEMA,
+    TABLE_LIST,
+    crete_database_schemas_tables,
+)
 from src.train.trainer import (
     lgbm_preprocessor_and_model,
     logreg_preprocessor_and_model,
     split_dataframes,
+    train_model,
 )
 from src.train.utils import load_yaml_file, get_data
 
@@ -147,3 +156,93 @@ class TestTrainer:
         assert isinstance(model, lgb.Booster)
         assert 0 <= recall <= 1, "Recall should be between 0 and 1."
         assert 0 <= roc_auc <= 1, "ROC AUC should be between 0 and 1."
+
+    def test_run_logreg_trainer_and_get_results(self):
+        # Given
+        model_type = "logreg"
+        model_name = "foo_bar_0"
+        schema_name = "ml_schema"
+        table_name = "models"
+        df = _fake_get_data(100_000)
+        X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
+            df, load_yaml_file("config.yaml")
+        )
+
+        # When
+        crete_database_schemas_tables(CONNECTION_STRING, SCHEMA, TABLE_LIST)
+        train_model(
+            model_name=model_name,
+            model_type=model_type,
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
+
+        # Then
+        engine = create_engine(CONNECTION_STRING)
+        conn = engine.connect()
+        with conn.begin():
+            # Define the table
+            metadata = MetaData()
+            table = Table(
+                table_name, metadata, autoload_with=engine, schema=schema_name
+            )
+
+            # Create a Select object
+            stmt = select(table).where(table.c.model_name == model_name)
+
+            # Execute the statement and fetch one row
+            result = conn.execute(stmt).fetchone()
+            # Assert that the inserted data is correct
+            assert result[2] == model_name
+            assert len(result) == 10
+
+            # Delete the inserted row
+            delete_stmt = delete(table).where(table.c.model_name == model_name)
+            conn.execute(delete_stmt)
+
+    def test_run_lightgbm_trainer_and_get_results(self):
+        # Given
+        model_type = "lightgbm"
+        model_name = "foo_bar_1"
+        schema_name = "ml_schema"
+        table_name = "models"
+        df = _fake_get_data(100_000)
+        X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
+            df, load_yaml_file("config.yaml")
+        )
+
+        # When
+        crete_database_schemas_tables(CONNECTION_STRING, SCHEMA, TABLE_LIST)
+        train_model(
+            model_name=model_name,
+            model_type=model_type,
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
+
+        # Then
+        engine = create_engine(CONNECTION_STRING)
+        conn = engine.connect()
+        with conn.begin():
+            # Define the table
+            metadata = MetaData()
+            table = Table(
+                table_name, metadata, autoload_with=engine, schema=schema_name
+            )
+
+            # Create a Select object
+            stmt = select(table).where(table.c.model_name == model_name)
+
+            # Execute the statement and fetch one row
+            result = conn.execute(stmt).fetchone()
+            # Assert that the inserted data is correct
+            assert result[2] == model_name
+            assert len(result) == 10
+
+            # Delete the inserted row
+            delete_stmt = delete(table).where(table.c.model_name == model_name)
+            conn.execute(delete_stmt)
