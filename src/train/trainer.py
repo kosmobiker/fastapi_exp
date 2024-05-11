@@ -16,6 +16,7 @@ Note: This code assumes the presence of other modules and functions imported fro
 import argparse
 from datetime import datetime
 import json
+import os
 from uuid import uuid4
 
 import joblib
@@ -137,7 +138,8 @@ def logreg_preprocessor_and_model(
     # Perform grid search
     grid_search.fit(X_train, y_train)
     best_model = grid_search.best_estimator_
-
+    print("seem to be bug here")
+    print(X_test)
     # Make probability predictions on test
     y_pred_test_proba = best_model.predict_proba(X_test)[:, 1]
 
@@ -206,7 +208,6 @@ def lgbm_preprocessor_and_model(
     return lgbm_preprocessor, model, recall_test, roc_auc_test
 
 
-
 def train_model(
     model_type: str,
     model_name: str,
@@ -242,7 +243,7 @@ def train_model(
             table_name="models",
             values=values_to_insert_logreg,
         )
-
+        print("Current working directory:", os.getcwd())
         # Save the model to local disk
         joblib.dump(logreg_model, log_reg_path)
 
@@ -316,4 +317,6 @@ if __name__ == "__main__":
         df, load_yaml_file("config.yaml")
     )
     # Train model
-    train_model(args.model_type, X_train, X_test, y_train, y_test, args.params)
+    train_model(
+        args.model_type, args.model_name, X_train, X_test, y_train, y_test, args.params
+    )
