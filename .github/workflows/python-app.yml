@@ -31,6 +31,8 @@ jobs:
       run: make setup
     - name: Format code
       run: make fmt
+    - name: Run docker
+      run: make docker
     - name: Run tests
       run:  |
         make test
