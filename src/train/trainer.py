@@ -206,9 +206,6 @@ def lgbm_preprocessor_and_model(
     return lgbm_preprocessor, model, recall_test, roc_auc_test
 
 
-def joblib_dump(object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
-    joblib.dump(object_to_dump, location)
-
 
 def train_model(
     model_type: str,
@@ -247,7 +244,7 @@ def train_model(
         )
 
         # Save the model to local disk
-        joblib_dump(logreg_model, log_reg_path)
+        joblib.dump(logreg_model, log_reg_path)
 
         #  Results
         print("\nLogistic Regression model trained successfully!")
@@ -283,8 +280,8 @@ def train_model(
             values=values_to_insert_lightgbm,
         )
         # Save the model to local disk
-        joblib_dump(lgbm_preprocessor, lgbm_preprocessor_path)
-        joblib_dump(lgbm_model, lgbm_model_path)
+        joblib.dump(lgbm_preprocessor, lgbm_preprocessor_path)
+        joblib.dump(lgbm_model, lgbm_model_path)
 
         print("\nLightGBM model trained successfully!")
         print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
