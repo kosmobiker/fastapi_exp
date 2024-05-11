@@ -5,6 +5,7 @@ import tempfile
 
 import yaml
 from src.train.utils import get_data, load_yaml_file
+from tests.functional.test_train import _fake_get_data
 
 
 class TestGetData(unittest.TestCase):
@@ -50,3 +51,10 @@ class TestLoadYamlFile(unittest.TestCase):
         result = load_yaml_file(invalid_yaml_file.name)
         os.unlink(invalid_yaml_file.name)
         self.assertIsNone(result)
+
+class TestTrainer:
+    def test_fake_get_data(self):
+        df = _fake_get_data(1000)
+        assert isinstance(df, pd.DataFrame)
+        assert df.shape == (1000, 32)
+        assert df['income'].dtype == 'float'

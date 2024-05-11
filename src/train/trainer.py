@@ -209,35 +209,15 @@ def lgbm_preprocessor_and_model(
 def joblib_dump(object_to_dump: Pipeline | lgb.Booster, location: str) -> None:
     joblib.dump(object_to_dump, location)
 
-
-if __name__ == "__main__":
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="Train a model.")
-    parser.add_argument(
-        "--model_type",
-        type=str,
-        default="logreg",
-        choices=["logreg", "lightgbm"],
-        help="Type of model to train.",
-    )
-    parser.add_argument(
-        "--model_name", type=str, default="TestFraudModel", help="Model ID."
-    )
-    parser.add_argument(
-        "--params",
-        type=json.loads,
-        default=None,
-        help="Parameters for training the model.",
-    )
-    args = parser.parse_args()
-    params = args.params
-    # Load data
-    df = get_data(PATH_TO_DATA)
-    X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
-        df, load_yaml_file("config.yaml")
-    )
-
-    if args.model_type == "logreg":
+def train_model(
+        model_type: str,
+        model_name: str, 
+        X_train: pd.DataFrame,
+        X_test: pd.DataFrame,
+        y_train: pd.Series,
+        y_test: pd.Series,
+        params: dict | None = None):
+    if model_type == "logreg":
         log_reg_model_id = uuid4()
         log_reg_path = f"./models/{log_reg_model_id}.pkl"
         logreg_model, logreg_recall, logreg_roc_auc = logreg_preprocessor_and_model(
@@ -246,7 +226,7 @@ if __name__ == "__main__":
         values_to_insert_logreg = {
             "model_id": log_reg_model_id,
             "train_date": datetime.now(),
-            "model_name": "TestFraudModel",
+            "model_name": model_name,
             "model_type": "Logistic Regression",
             "hyperparameters": params,
             "roc_auc_train": None,
@@ -272,7 +252,7 @@ if __name__ == "__main__":
         print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
         print(f"\nTest roc_auc_score: {logreg_roc_auc}")
 
-    elif args.model_type == "lightgbm":
+    elif model_type == "lightgbm":
         lgbm_model_id = uuid4()
         lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
         lgbm_model_path = f"./models/{lgbm_model_id}_model.txt"
@@ -284,7 +264,7 @@ if __name__ == "__main__":
         values_to_insert_lightgbm = {
             "model_id": lgbm_model_id,
             "train_date": datetime.now(),
-            "model_name": "TestFraudModel",
+            "model_name": model_name,
             "model_type": "LightGBM",
             "hyperparameters": params,
             "roc_auc_train": None,
@@ -309,3 +289,34 @@ if __name__ == "__main__":
         print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
     else:
         ValueError("Please provide a valid model type.")
+       
+
+if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Train a model.")
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="logreg",
+        choices=["logreg", "lightgbm"],
+        help="Type of model to train.",
+    )
+    parser.add_argument(
+        "--model_name", type=str, default="TestFraudModel", help="Model ID."
+    )
+    parser.add_argument(
+        "--params",
+        type=json.loads,
+        default=None,
+        help="Parameters for training the model.",
+    )
+    args = parser.parse_args()
+    # Load data
+    df = get_data(PATH_TO_DATA)
+    X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
+        df, load_yaml_file("config.yaml")
+    )
+    # Train model
+    train_model(args.model_type, X_train, X_test, y_train, y_test, args.params)
+
+

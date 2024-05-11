@@ -17,7 +17,7 @@ test:
 	pipenv run pytest	-v
 .PHONY: coverage
 coverage:
-	pipenv run pytest --cov=src --cov-fail-under=80
+	pipenv run pytest --cov=src --cov-fail-under=80 --cov-report term-missing
 	rm -f .coverage*
 	rm -rf htmlcov/
 .PHONY: pylint
