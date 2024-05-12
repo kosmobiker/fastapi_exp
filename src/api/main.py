@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from src.api import crud, database, models, schemas

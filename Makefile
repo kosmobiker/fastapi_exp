@@ -22,7 +22,7 @@ coverage:
 	rm -rf htmlcov/
 .PHONY: pylint
 pylint:
-	pipenv run pylint src/ --fail-under=8.0
+	pipenv run pylint src/ tests/ --fail-under=8.0
 .PHONY: train
 train:
 		pipenv run python	src/train/trainer.py

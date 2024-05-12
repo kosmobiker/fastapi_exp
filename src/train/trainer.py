@@ -16,7 +16,6 @@ Note: This code assumes the presence of other modules and functions imported fro
 import argparse
 from datetime import datetime
 import json
-import os
 from uuid import uuid4
 
 import joblib

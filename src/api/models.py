@@ -1,15 +1,11 @@
 from sqlalchemy import (
     JSON,
     UUID,
-    Boolean,
     Column,
     DateTime,
     Float,
-    ForeignKey,
-    Integer,
     String,
 )
-from sqlalchemy.orm import relationship
 
 from src.api.database import Base
 
