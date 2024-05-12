@@ -111,7 +111,7 @@ class TestTrainer:
         # Given
         model_type = "logreg"
         model_name = "foo_bar_0"
-        schema_name = "ml_schema"
+        schema_name = SCHEMA
         table_name = "models"
         df = _fake_get_data(10_000)
         X_train, X_test, y_train, y_test = split_dataframes(df)
@@ -154,7 +154,7 @@ class TestTrainer:
         # Given
         model_type = "lightgbm"
         model_name = "foo_bar_1"
-        schema_name = "ml_schema"
+        schema_name = SCHEMA
         table_name = "models"
         df = _fake_get_data(10_000)
         X_train, X_test, y_train, y_test = split_dataframes(df)

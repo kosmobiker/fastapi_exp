@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from typing import Any
 
 CONNECTION_STRING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
-SCHEMA = "ml_schema"
+SCHEMA = "public"
 TABLE_LIST = ["models"]
 
 

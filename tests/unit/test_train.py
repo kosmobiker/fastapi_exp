@@ -1,8 +1,7 @@
-import unittest
-import pandas as pd
 import os
 import tempfile
-
+import unittest
+import pandas as pd
 from src.train.utils import get_data
 from tests.functional.test_train import _fake_get_data
 

@@ -23,6 +23,7 @@ pytest-cov = "*"
 pytest = "*"
 flake8 = "*"
 sqlalchemy-utils = "*"
+httpx = "*"
 
 [dev-packages]
 
