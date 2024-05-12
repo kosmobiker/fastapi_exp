@@ -11,19 +11,19 @@ from sqlalchemy import (
 from src.db.db_utils import (
     crete_database_schemas_tables,
     insert_values_into_table,
+    CONNECTION_STRING,
+    SCHEMA,
 )
 from sqlalchemy_utils.functions import database_exists
 from datetime import datetime
 
-CONNECTION_STING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
-SCHEMA = "ml_schema"
 TABLE_LIST = ["models"]
 
 
 class TestDatabase:
     def tests_connection_db_schemas_tables(
         self,
-        connection_string: str = CONNECTION_STING,
+        connection_string: str = CONNECTION_STRING,
         schema_name: str = SCHEMA,
         table_list: list[str] = TABLE_LIST,
     ):
@@ -48,7 +48,7 @@ class TestDatabase:
 
     def test_insert_values(
         self,
-        connection_string: str = CONNECTION_STING,
+        connection_string: str = CONNECTION_STRING,
         schema_name: str = SCHEMA,
     ):
         # Given

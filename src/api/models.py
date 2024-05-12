@@ -11,7 +11,6 @@ from src.api.database import Base
 
 
 class TrainedModels(Base):
-    __table_args__ = {"schema": "ml_schema"}
     __tablename__ = "models"
 
     model_id = Column(UUID, primary_key=True)
