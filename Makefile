@@ -28,3 +28,6 @@ train:
 		pipenv run python	src/train/trainer.py
 .PHONY: verify
 verify: fmt test coverage pylint
+.PHONY: fastapi
+fastapi:
+	pipenv run fastapi dev src/api/main.py --reload
