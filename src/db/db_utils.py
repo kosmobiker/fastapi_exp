@@ -13,12 +13,6 @@ from sqlalchemy import create_engine, inspect, text, Table, Column, MetaData
 from sqlalchemy import String, DateTime, Float, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from typing import Any
-from sqlalchemy import create_engine, inspect, text, insert
-from sqlalchemy_utils.functions import database_exists, create_database
-from sqlalchemy import create_engine, inspect, text, Table, Column, MetaData
-from sqlalchemy import String, DateTime, Float, JSON
-from sqlalchemy.dialects.postgresql import UUID
-from typing import Any
 
 CONNECTION_STRING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
 SCHEMA = "ml_schema"

@@ -49,33 +49,27 @@ from src.train.transform import (
     MissingFlagger,
     MissingValueFiller,
 )
-from src.train.utils import load_yaml_file, get_data
+from src.train.utils import get_data
 from src.db.db_utils import insert_values_into_table, CONNECTION_STRING, SCHEMA
 
-PATH_TO_DATA = load_yaml_file("config.yaml")["data_path"]
-SEED = load_yaml_file("config.yaml")["seed"]
+PATH_TO_DATA = "data/Base.csv"
+SEED = 42
+TARGET = "fraud_bool"
 
 
 def split_dataframes(
-    df: pd.DataFrame, yaml_data: dict
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """
-    Split the data into training, holdout, and test sets.
+    Split the data into training and test sets.
     """
-    seed = yaml_data["seed"]
-    train_size = yaml_data["train_size"]
-    test_size = yaml_data["test_size"]
-    target = yaml_data["target"]
-    X = df.drop(target, axis=1)
-    y = df[target]
+    X = df.drop(TARGET, axis=1)
+    y = df[TARGET]
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, stratify=y, train_size=train_size, random_state=seed
-    )
-    X_holdout, X_test, y_holdout, y_test = train_test_split(
-        X_test, y_test, stratify=y_test, test_size=test_size, random_state=seed
+        X, y, stratify=y, train_size=0.8, random_state=SEED
     )
 
-    return X_train, X_holdout, X_test, y_train, y_holdout, y_test
+    return X_train, X_test, y_train, y_test
 
 
 # Recall @ 5% FPR
@@ -241,7 +235,6 @@ def train_model(
             table_name="models",
             values=values_to_insert_logreg,
         )
-        print("Current working directory:", os.getcwd())
         # Save the model to local disk
         joblib.dump(logreg_model, log_reg_path)
 
@@ -311,9 +304,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Load data
     df = get_data(PATH_TO_DATA)
-    X_train, X_holdout, X_test, y_train, y_holdout, y_test = split_dataframes(
-        df, load_yaml_file("config.yaml")
-    )
+    X_train, X_test, y_train, y_test = split_dataframes(df)
     # Train model
     train_model(
         args.model_type, args.model_name, X_train, X_test, y_train, y_test, args.params

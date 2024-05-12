@@ -1,8 +1,5 @@
-import unittest
-from unittest.mock import Mock, patch
 from sqlalchemy import create_engine, inspect
 from src.db.db_utils import (
-    _create_schema,
     crete_database_schemas_tables,
     insert_values_into_table,
 )
