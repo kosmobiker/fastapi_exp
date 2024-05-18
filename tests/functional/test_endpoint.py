@@ -2,11 +2,12 @@ from datetime import datetime
 import json
 from uuid import uuid4
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import MetaData, Table, create_engine, delete
 
 from src.api.main import app
 from src.db.db_utils import CONNECTION_STRING, SCHEMA, insert_values_into_table
-from src.train.trainer import DEFAULT_MODEL
+from src.train.trainer import DEFAULT_MODEL, split_dataframes, train_model
 from tests.functional.test_train import _fake_get_data
 
 client = TestClient(app)
@@ -51,6 +52,20 @@ def test_read_models():
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
 
+@pytest.fixture(scope="session", autouse=True)
+def create_defaul_models():
+    df = _fake_get_data(1000)
+    X_train, X_test, y_train, y_test = split_dataframes(df)
+    #train dummy logreg model
+    train_model(
+        "logreg", DEFAULT_MODEL, X_train, X_test, y_train, y_test
+    )
+    train_model(
+        "lightgbm", "TestLightGBMModel", X_train, X_test, y_train, y_test
+    )
+
+    
+    
 
 def test_predict_fraud_default_logreg_model_one_tx():
     # Given
