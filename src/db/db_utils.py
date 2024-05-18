@@ -7,7 +7,7 @@ Functions:
 - insert_values_into_table(connection_string, schema_name, table_name, values): Inserts values into a table in the database.
 """
 
-from sqlalchemy import create_engine, inspect, text, insert
+from sqlalchemy import Integer, create_engine, inspect, text, insert
 from sqlalchemy_utils.functions import database_exists, create_database
 from sqlalchemy import create_engine, inspect, text, Table, Column, MetaData
 from sqlalchemy import String, DateTime, Float, JSON
@@ -16,7 +16,7 @@ from typing import Any
 
 CONNECTION_STRING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
 SCHEMA = "public"
-TABLE_LIST = ["models"]
+TABLE_LIST = ["models", "predictions"]
 
 
 def _create_schema(engine, schema) -> None:
@@ -56,6 +56,18 @@ def crete_database_schemas_tables(
         Column("roc_auc_test", Float),
         Column("recall_test", Float),
         Column("model_path", String),
+        schema=schema_name,
+    )
+
+    table_predictions = Table(
+        "predictions",
+        metadata,
+        Column("prediction_id", UUID, primary_key=True),
+        Column("model_id", UUID),
+        Column("prediction_date", DateTime),
+        Column("input_data", JSON),
+        Column("y_pred", Integer),
+        Column("y_pred_proba", Float),
         schema=schema_name,
     )
 

@@ -54,6 +54,7 @@ from src.db.db_utils import insert_values_into_table, CONNECTION_STRING, SCHEMA
 PATH_TO_DATA = "data/Base.csv"
 SEED = 42
 TARGET = "fraud_bool"
+DEFAULT_MODEL = "TestLogRegFraudModel"
 
 
 def split_dataframes(
@@ -272,7 +273,7 @@ def train_model(
         )
         # Save the model to local disk
         joblib.dump(lgbm_preprocessor, lgbm_preprocessor_path)
-        joblib.dump(lgbm_model, lgbm_model_path)
+        lgbm_model.save_model(lgbm_model_path)
 
         print("\nLightGBM model trained successfully!")
         print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
@@ -292,7 +293,7 @@ if __name__ == "__main__":
         help="Type of model to train.",
     )
     parser.add_argument(
-        "--model_name", type=str, default="TestFraudModel", help="Model ID."
+        "--model_name", type=str, default=DEFAULT_MODEL, help="Model ID."
     )
     parser.add_argument(
         "--params",

@@ -13,11 +13,10 @@ from src.db.db_utils import (
     insert_values_into_table,
     CONNECTION_STRING,
     SCHEMA,
+    TABLE_LIST,
 )
 from sqlalchemy_utils.functions import database_exists
 from datetime import datetime
-
-TABLE_LIST = ["models"]
 
 
 class TestDatabase:

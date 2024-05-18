@@ -1,10 +1,14 @@
 from datetime import datetime
+import json
 from uuid import uuid4
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import MetaData, Table, create_engine, delete
 
 from src.api.main import app
 from src.db.db_utils import CONNECTION_STRING, SCHEMA, insert_values_into_table
+from src.train.trainer import DEFAULT_MODEL, split_dataframes, train_model
+from tests.functional.test_train import _fake_get_data
 
 client = TestClient(app)
 
@@ -47,3 +51,63 @@ def test_read_models():
 
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def create_defaul_models():
+    df = _fake_get_data(1000)
+    X_train, X_test, y_train, y_test = split_dataframes(df)
+    # train dummy logreg model
+    train_model("logreg", DEFAULT_MODEL, X_train, X_test, y_train, y_test)
+    train_model("lightgbm", "TestLightGBMModel", X_train, X_test, y_train, y_test)
+
+
+def test_predict_fraud_default_logreg_model_one_tx():
+    # Given
+    transaction_json = (
+        _fake_get_data(1).drop(["fraud_bool"], axis=1).to_dict(orient="records")[0]
+    )
+
+    # When
+    response = client.post("/predict/", json=transaction_json)
+
+    # Then
+    assert response.status_code == 200
+
+    result = response.json()
+    assert (
+        result["prediction_label"] == 0 or result["prediction_label"] == 1
+    ), "Label should be 0 or 1"
+    assert (
+        0 <= result["prediction_proba"][0] <= 1
+    ), "Prediction probability should be between 0 and 1"
+    assert (
+        0 <= result["prediction_proba"][1] <= 1
+    ), "Prediction probability should be between 0 and 1"
+    assert (
+        result["prediction_proba"][0] + result["prediction_proba"][1] == 1
+    ), "Probabilities should sum to 1"
+    assert result["model_used"] == DEFAULT_MODEL
+
+
+def test_predict_fraud_lightgbm_model_one_tx():
+    # Given
+    transaction_json = (
+        _fake_get_data(1).drop(["fraud_bool"], axis=1).to_dict(orient="records")[0]
+    )
+
+    # When
+    use_model = "TestLightGBMModel"
+    response = client.post(f"/predict/?model_to_use={use_model}", json=transaction_json)
+    print("this is a response", response.json())
+    # Then
+    assert response.status_code == 200
+
+    result = response.json()
+    assert (
+        result["prediction_label"] == 0 or result["prediction_label"] == 1
+    ), "Label should be 0 or 1"
+    assert (
+        0 <= result["prediction_proba"] <= 1
+    ), "Prediction probability should be between 0 and 1"
+    assert result["model_used"] == use_model

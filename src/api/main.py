@@ -33,3 +33,13 @@ def read_models(
 ):
     models = crud.get_models(db, start_date=start_date, end_date=end_date, limit=limit)
     return models
+
+
+@app.post("/predict/")
+def predict_fraud(
+    transaction: schemas.TransactionBase,
+    db: Session = Depends(get_db),
+    model_to_use: str | None = None,
+):
+    predictions = crud.predict_fraud(transaction, db, model_to_use)
+    return predictions
