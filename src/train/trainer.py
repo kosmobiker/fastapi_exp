@@ -54,6 +54,7 @@ from src.db.db_utils import insert_values_into_table, CONNECTION_STRING, SCHEMA
 PATH_TO_DATA = "data/Base.csv"
 SEED = 42
 TARGET = "fraud_bool"
+DEFAULT_MODEL = "TestLogRegFraudModel"
 
 
 def split_dataframes(
@@ -292,7 +293,7 @@ if __name__ == "__main__":
         help="Type of model to train.",
     )
     parser.add_argument(
-        "--model_name", type=str, default="TestFraudModel", help="Model ID."
+        "--model_name", type=str, default=DEFAULT_MODEL, help="Model ID."
     )
     parser.add_argument(
         "--params",
