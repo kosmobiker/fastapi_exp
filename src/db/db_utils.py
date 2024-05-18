@@ -18,6 +18,7 @@ CONNECTION_STRING = "postgresql://myuser:mypassword@localhost:5432/mydatabase"
 SCHEMA = "public"
 TABLE_LIST = ["models", "predictions"]
 
+
 def _create_schema(engine, schema) -> None:
     stmt = text(f"CREATE SCHEMA {schema}")
     with engine.connect() as conn:

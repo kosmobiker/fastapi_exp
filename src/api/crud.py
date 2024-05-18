@@ -1,6 +1,7 @@
 from datetime import datetime
 from io import StringIO
 import pickle
+import lightgbm as lgb
 import joblib
 import pandas as pd
 from sqlalchemy import and_
@@ -47,25 +48,30 @@ def get_models(
         models = db.query(TrainedModels).limit(limit).all()
     return models
 
-def predict_fraud(transaction: TransactionBase, db: Session, model_to_use: str | None = None):
+
+def predict_fraud(
+    transaction: TransactionBase, db: Session, model_to_use: str | None = None
+):
     """
-    Check model_to_use:
+    Check model_type_to_use:
     - If None, use the default model
     Check type of model in database:
     - If it is logreg, then load the pipeline
     - If it is lightgbm, then load preprocessor and model
     Make prediction
     """
-    if model_to_use is None:
+    if not model_to_use:
         model_to_use = DEFAULT_MODEL
     model = (
         db.query(TrainedModels)
         .filter(TrainedModels.model_name == model_to_use)
         .order_by(TrainedModels.roc_auc_test.desc())
         .first()
-        )
-    
+    )
     model_id, model_type = model.model_id, model.model_type
+    if not model_id:
+        response = {"error": "No model found"}
+
     if model_type == "Logistic Regression":
         log_reg_path = f"./models/{model_id}.pkl"
         model = joblib.load(log_reg_path)
@@ -79,12 +85,30 @@ def predict_fraud(transaction: TransactionBase, db: Session, model_to_use: str |
         response = {
             "prediction_label": int(prediction[0]),
             "prediction_proba": prediction_proba[0].tolist(),
-            "model_used": model_to_use
+            "model_used": model_to_use,
+        }
+        return response
+
+    elif model_type == "LightGBM":
+        preprocessor_path = f"./models/{model_id}_preproc.pkl"
+        model_path = f"./models/{model_id}_model.txt"
+        preprocessor = joblib.load(preprocessor_path)
+        model = lgb.Booster(model_file=model_path)
+        # Make the prediction
+        transaction_dict = transaction.model_dump()
+        df = pd.DataFrame([transaction_dict])
+        df_transformed = preprocessor.transform(df)
+        prediction_proba = model.predict(df_transformed)
+        prediction = [1 if prob > 0.5 else 0 for prob in prediction_proba]
+
+
+        # Prepare the response
+        response = {
+            "prediction_label": int(prediction[0]),
+            "prediction_proba": prediction_proba[0].tolist(),
+            "model_used": model_to_use,
         }
 
         return response
-        
-    elif model_type == "LightGBM":
-        pass
     else:
-        raise ValueError(f"Model type {model_type} not supported")
+        response = {"error": f"Model type {model_type} not supported"}

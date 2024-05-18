@@ -273,7 +273,7 @@ def train_model(
         )
         # Save the model to local disk
         joblib.dump(lgbm_preprocessor, lgbm_preprocessor_path)
-        joblib.dump(lgbm_model, lgbm_model_path)
+        lgbm_model.save_model(lgbm_model_path)
 
         print("\nLightGBM model trained successfully!")
         print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")

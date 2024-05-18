@@ -19,7 +19,6 @@ from sqlalchemy_utils.functions import database_exists
 from datetime import datetime
 
 
-
 class TestDatabase:
     def tests_connection_db_schemas_tables(
         self,

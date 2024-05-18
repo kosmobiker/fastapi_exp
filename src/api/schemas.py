@@ -19,6 +19,7 @@ class TrainedModelBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class TransactionBase(BaseModel):
     income: float
     name_email_similarity: float
