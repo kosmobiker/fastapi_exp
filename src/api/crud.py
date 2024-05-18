@@ -101,7 +101,6 @@ def predict_fraud(
         prediction_proba = model.predict(df_transformed)
         prediction = [1 if prob > 0.5 else 0 for prob in prediction_proba]
 
-
         # Prepare the response
         response = {
             "prediction_label": int(prediction[0]),

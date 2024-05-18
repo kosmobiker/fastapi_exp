@@ -52,20 +52,15 @@ def test_read_models():
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def create_defaul_models():
     df = _fake_get_data(1000)
     X_train, X_test, y_train, y_test = split_dataframes(df)
-    #train dummy logreg model
-    train_model(
-        "logreg", DEFAULT_MODEL, X_train, X_test, y_train, y_test
-    )
-    train_model(
-        "lightgbm", "TestLightGBMModel", X_train, X_test, y_train, y_test
-    )
+    # train dummy logreg model
+    train_model("logreg", DEFAULT_MODEL, X_train, X_test, y_train, y_test)
+    train_model("lightgbm", "TestLightGBMModel", X_train, X_test, y_train, y_test)
 
-    
-    
 
 def test_predict_fraud_default_logreg_model_one_tx():
     # Given
@@ -103,10 +98,8 @@ def test_predict_fraud_lightgbm_model_one_tx():
 
     # When
     use_model = "TestLightGBMModel"
-    response = client.post(
-        f"/predict/?model_to_use={use_model}", json=transaction_json
-    )
-    print("this is a response", response.json())   
+    response = client.post(f"/predict/?model_to_use={use_model}", json=transaction_json)
+    print("this is a response", response.json())
     # Then
     assert response.status_code == 200
 
