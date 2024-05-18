@@ -68,10 +68,11 @@ def predict_fraud(
         .order_by(TrainedModels.roc_auc_test.desc())
         .first()
     )
-    model_id, model_type = model.model_id, model.model_type
-    if not model_id:
+    if model is None:
         response = {"error": "No model found"}
+        return response
 
+    model_id, model_type = model.model_id, model.model_type
     if model_type == "Logistic Regression":
         log_reg_path = f"./models/{model_id}.pkl"
         model = joblib.load(log_reg_path)
