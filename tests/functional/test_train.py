@@ -1,3 +1,4 @@
+import os
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
@@ -118,7 +119,7 @@ class TestTrainer:
 
         # When
         crete_database_schemas_tables(CONNECTION_STRING, SCHEMA, TABLE_LIST)
-        train_model(
+        _, path_to_delete = train_model(
             model_name=model_name,
             model_type=model_type,
             X_train=X_train,
@@ -149,6 +150,9 @@ class TestTrainer:
             # Delete the inserted row
             delete_stmt = delete(table).where(table.c.model_name == model_name)
             conn.execute(delete_stmt)
+
+        if os.path.isfile(path_to_delete):
+            os.remove(path_to_delete)
 
     def test_run_lightgbm_trainer_and_get_results(self):
         # Given
@@ -161,7 +165,7 @@ class TestTrainer:
 
         # When
         crete_database_schemas_tables(CONNECTION_STRING, SCHEMA, TABLE_LIST)
-        train_model(
+        path_to_delete_pr, path_to_delete_model = train_model(
             model_name=model_name,
             model_type=model_type,
             X_train=X_train,
@@ -192,3 +196,8 @@ class TestTrainer:
             # Delete the inserted row
             delete_stmt = delete(table).where(table.c.model_name == model_name)
             conn.execute(delete_stmt)
+
+        if os.path.isfile(path_to_delete_pr):
+            os.remove(path_to_delete_pr)
+        if os.path.isfile(path_to_delete_model):
+            os.remove(path_to_delete_model)

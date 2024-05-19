@@ -243,6 +243,8 @@ def train_model(
         print(f"\nTest Recall @ 5% FPR: {logreg_recall}")
         print(f"\nTest roc_auc_score: {logreg_roc_auc}")
 
+        return None, log_reg_path
+
     elif model_type == "lightgbm":
         lgbm_model_id = uuid4()
         lgbm_preprocessor_path = f"./models/{lgbm_model_id}_preproc.pkl"
@@ -278,6 +280,8 @@ def train_model(
         print("\nLightGBM model trained successfully!")
         print(f"\nTest Recall @ 5% FPR: {lgbm_recall}")
         print(f"\nTest roc_auc_score: {lgbm_roc_auc}")
+
+        return lgbm_preprocessor_path, lgbm_model_path
     else:
         print("Please provide a valid model type.")
 

@@ -1,9 +1,10 @@
 from datetime import datetime
 import json
+import os
 from uuid import uuid4
 from fastapi.testclient import TestClient
 import pytest
-from sqlalchemy import MetaData, Table, create_engine, delete
+from sqlalchemy import MetaData, Table, create_engine, delete, text
 
 from src.api.main import app
 from src.db.db_utils import CONNECTION_STRING, SCHEMA, insert_values_into_table
@@ -52,6 +53,7 @@ def test_read_all_models():
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
 
+
 def test_read_models_start_date():
     # Given
     engine = create_engine(CONNECTION_STRING)
@@ -85,6 +87,7 @@ def test_read_models_start_date():
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
 
+
 def test_read_models_end_date():
     # Given
     engine = create_engine(CONNECTION_STRING)
@@ -117,6 +120,7 @@ def test_read_models_end_date():
 
         delete_stmt = delete(table).where(table.c.model_id == fake_model_id)
         conn.execute(delete_stmt)
+
 
 def test_read_models_before_and_end_date():
     # Given
@@ -152,19 +156,39 @@ def test_read_models_before_and_end_date():
         conn.execute(delete_stmt)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def create_defaul_models():
-    df = _fake_get_data(1000)
-    X_train, X_test, y_train, y_test = split_dataframes(df)
-    # train dummy logreg model
-    train_model("logreg", DEFAULT_MODEL, X_train, X_test, y_train, y_test)
-    train_model("lightgbm", "TestLightGBMModel", X_train, X_test, y_train, y_test)
+def create_fake_models():
+    engine = create_engine(CONNECTION_STRING)
+    conn = engine.connect()
+    stmt = "SELECT * FROM models WHERE model_name in ('TestLogRegFraudModel', 'TestLightGBMModel')"
+    if len(conn.execute(text(stmt)).fetchall()) < 3:
+        df = _fake_get_data(10_000)
+        X_train, X_test, y_train, y_test = split_dataframes(df)
+        train_model(
+            model_name="TestLogRegFraudModel",
+            model_type="logreg",
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
+        train_model(
+            model_name="TestLightGBMModel",
+            model_type="lightgbm",
+            X_train=X_train,
+            X_test=X_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
 
 
 def test_predict_fraud_default_logreg_model_one_tx():
     # Given
+    create_fake_models()
+    num_transactions = 1
     transaction_json = (
-        _fake_get_data(1).drop(["fraud_bool"], axis=1).to_dict(orient="records")[0]
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
     )
 
     # When
@@ -175,24 +199,21 @@ def test_predict_fraud_default_logreg_model_one_tx():
 
     result = response.json()
     assert (
-        result["prediction_label"] == 0 or result["prediction_label"] == 1
+        result["prediction_label"][0] == 0 or result["prediction_label"][0] == 1
     ), "Label should be 0 or 1"
     assert (
         0 <= result["prediction_proba"][0] <= 1
     ), "Prediction probability should be between 0 and 1"
-    assert (
-        0 <= result["prediction_proba"][1] <= 1
-    ), "Prediction probability should be between 0 and 1"
-    assert (
-        result["prediction_proba"][0] + result["prediction_proba"][1] == 1
-    ), "Probabilities should sum to 1"
     assert result["model_used"] == DEFAULT_MODEL
 
 
 def test_predict_fraud_lightgbm_model_one_tx():
     # Given
+    num_transactions = 1
     transaction_json = (
-        _fake_get_data(1).drop(["fraud_bool"], axis=1).to_dict(orient="records")[0]
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
     )
 
     # When
@@ -204,17 +225,21 @@ def test_predict_fraud_lightgbm_model_one_tx():
     assert response.status_code == 200
     result = response.json()
     assert (
-        result["prediction_label"] == 0 or result["prediction_label"] == 1
+        result["prediction_label"][0] == 0 or result["prediction_label"][0] == 1
     ), "Label should be 0 or 1"
     assert (
-        0 <= result["prediction_proba"] <= 1
+        0 <= result["prediction_proba"][0] <= 1
     ), "Prediction probability should be between 0 and 1"
     assert result["model_used"] == use_model
 
+
 def test_model_not_found():
     # Given
+    num_transactions = 1
     transaction_json = (
-        _fake_get_data(1).drop(["fraud_bool"], axis=1).to_dict(orient="records")[0]
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
     )
 
     # When
@@ -226,3 +251,49 @@ def test_model_not_found():
     assert response.status_code == 200
     result = response.json()
     assert result["error"] == "No model found"
+
+
+def test_predict_fraud_default_logreg_model_multi_tx():
+    # Given
+    num_transactions = 1_000
+    transaction_json = (
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
+    )
+
+    # When
+    response = client.post("/predict/", json=transaction_json)
+
+    # Then
+    assert response.status_code == 200
+
+    result = response.json()
+    assert len(result["prediction_label"]) == num_transactions
+    assert all(result["prediction_label"]) in [0, 1]
+    assert 0 <= all(result["prediction_proba"]) <= 1
+    assert result["model_used"] == DEFAULT_MODEL
+
+
+def test_predict_fraud_default_lightgbm_model_multi_tx():
+    # Given
+    num_transactions = 1_000
+    transaction_json = (
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
+    )
+
+    # When
+    use_model = "TestLightGBMModel"
+    response = client.post(f"/predict/?model_to_use={use_model}", json=transaction_json)
+    print("this is a response", response.json())
+
+    # Then
+    assert response.status_code == 200
+
+    result = response.json()
+    assert len(result["prediction_label"]) == num_transactions
+    assert all(result["prediction_label"]) in [0, 1]
+    assert 0 <= all(result["prediction_proba"]) <= 1
+    assert result["model_used"] == use_model
