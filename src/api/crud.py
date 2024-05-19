@@ -50,7 +50,7 @@ def get_models(
 
 
 def predict_fraud(
-    transaction: TransactionBase, db: Session, model_to_use: str | None = None
+    transactions: TransactionBase, db: Session, model_to_use: str | None = None
 ):
     """
     Check model_type_to_use:
@@ -68,25 +68,27 @@ def predict_fraud(
         .order_by(TrainedModels.roc_auc_test.desc())
         .first()
     )
-    model_id, model_type = model.model_id, model.model_type
-    if not model_id:
+    if model is None:
         response = {"error": "No model found"}
+        return response
 
+    model_id, model_type = model.model_id, model.model_type
     if model_type == "Logistic Regression":
         log_reg_path = f"./models/{model_id}.pkl"
         model = joblib.load(log_reg_path)
         # Make the prediction
-        transaction_dict = transaction.model_dump()
-        df = pd.DataFrame([transaction_dict])
+        transactions_dict = [t.model_dump() for t in transactions]
+        df = pd.DataFrame(transactions_dict)
         prediction = model.predict(df)
         prediction_proba = model.predict_proba(df)
 
         # Prepare the response
         response = {
-            "prediction_label": int(prediction[0]),
-            "prediction_proba": prediction_proba[0].tolist(),
+            "prediction_label": prediction.tolist(),
+            "prediction_proba": prediction_proba[:, 0].tolist(),
             "model_used": model_to_use,
         }
+
         return response
 
     elif model_type == "LightGBM":
@@ -95,16 +97,16 @@ def predict_fraud(
         preprocessor = joblib.load(preprocessor_path)
         model = lgb.Booster(model_file=model_path)
         # Make the prediction
-        transaction_dict = transaction.model_dump()
-        df = pd.DataFrame([transaction_dict])
+        transactions_dict = [t.model_dump() for t in transactions]
+        df = pd.DataFrame(transactions_dict)
         df_transformed = preprocessor.transform(df)
         prediction_proba = model.predict(df_transformed)
         prediction = [1 if prob > 0.5 else 0 for prob in prediction_proba]
 
         # Prepare the response
         response = {
-            "prediction_label": int(prediction[0]),
-            "prediction_proba": prediction_proba[0].tolist(),
+            "prediction_label": prediction,
+            "prediction_proba": prediction_proba.tolist(),
             "model_used": model_to_use,
         }
 

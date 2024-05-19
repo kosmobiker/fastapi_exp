@@ -37,7 +37,7 @@ def read_models(
 
 @app.post("/predict/")
 def predict_fraud(
-    transaction: schemas.TransactionBase,
+    transaction: list[schemas.TransactionBase],
     db: Session = Depends(get_db),
     model_to_use: str | None = None,
 ):

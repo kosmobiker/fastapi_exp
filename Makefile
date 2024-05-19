@@ -26,6 +26,7 @@ pylint:
 .PHONY: train
 train:
 		pipenv run python	src/train/trainer.py
+		pipenv run python	src/train/trainer.py --model_name=TestLightGBMModel --model_type=lightgbm
 .PHONY: verify
 verify: fmt test coverage pylint
 .PHONY: fastapi
