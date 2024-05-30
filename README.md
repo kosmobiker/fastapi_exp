@@ -14,12 +14,12 @@ The goal of the project is to use this dataset to train a model that can predict
 
 ## Model
 
-* 1. Get data
-* 2. Split data into train, validate and test part
-* 3. Build a model (LogReg and LightGBM)
-* 4. Model must predict if transaction is fraud or not
-* 5. Save preprocessor and model to the disk
-* 6. Add a record to the model registry with models' metadata
+* Get data
+* Split data into train, validate and test part
+* Build a model (LogReg and LightGBM)
+* Model must predict if transaction is fraud or not
+* Save preprocessor and model to the disk
+* Add a record to the model registry with models' metadata
 
 ## Endpoints
 * [x] `/models`: Returns list of available models and their properties
