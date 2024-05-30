@@ -19,6 +19,18 @@ def get_models(
     end_date: datetime | None = None,
     limit: int = 100,
 ):
+    """
+    Retrieve trained models from the database based on the specified criteria.
+
+    Args:
+        db (Session): The database session.
+        start_date (datetime | None, optional): The start date for filtering the models. Defaults to None.
+        end_date (datetime | None, optional): The end date for filtering the models. Defaults to None.
+        limit (int, optional): The maximum number of models to retrieve. Defaults to 100.
+
+    Returns:
+        List[TrainedModels]: A list of trained models that match the specified criteria.
+    """
     if start_date and end_date:
         models = (
             db.query(TrainedModels)
@@ -129,3 +141,98 @@ def predict_fraud(
     db.add(prediction_record)
     db.commit()
     return response
+
+
+def get_history(
+    db: Session,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    model_to_use: str | None = None,
+    limit: int = 100,
+):
+    """
+    Retrieve prediction history from the database based on the specified criteria.
+
+    Args:
+        db (Session): The database session.
+        start_date (datetime | None, optional): The start date for filtering the history. Defaults to None.
+        end_date (datetime | None, optional): The end date for filtering the history. Defaults to None.
+        model_to_use (str | None, optional): The model name for filtering the history. Defaults to None.
+        limit (int, optional): The maximum number of records to retrieve. Defaults to 100.
+
+    Returns:
+        List[Prediction]: A list of prediction records that match the specified criteria.
+    """
+    if start_date and end_date and model_to_use:
+        history = (
+            db.query(Prediction)
+            .filter(
+                and_(
+                    Prediction.ts >= start_date,
+                    Prediction.ts <= end_date,
+                    Prediction.model_name == model_to_use,
+                )
+            )
+            .limit(limit)
+            .all()
+        )
+    elif start_date and end_date:
+        history = (
+            db.query(Prediction)
+            .filter(
+                and_(
+                    Prediction.ts >= start_date,
+                    Prediction.ts <= end_date,
+                )
+            )
+            .limit(limit)
+            .all()
+        )
+    elif start_date and model_to_use:
+        history = (
+            db.query(Prediction)
+            .filter(
+                and_(
+                    Prediction.ts >= start_date,
+                    Prediction.model_name == model_to_use,
+                )
+            )
+            .limit(limit)
+            .all()
+        )
+    elif end_date and model_to_use:
+        history = (
+            db.query(Prediction)
+            .filter(
+                and_(
+                    Prediction.ts <= end_date,
+                    Prediction.model_name == model_to_use,
+                )
+            )
+            .limit(limit)
+            .all()
+        )
+    elif start_date:
+        history = (
+            db.query(Prediction)
+            .filter(Prediction.ts >= start_date)
+            .limit(limit)
+            .all()
+        )
+    elif end_date:
+        history = (
+            db.query(Prediction)
+            .filter(Prediction.ts <= end_date)
+            .limit(limit)
+            .all()
+        )
+    elif model_to_use:
+        history = (
+            db.query(Prediction)
+            .filter(Prediction.model_name == model_to_use)
+            .limit(limit)
+            .all()
+        )
+    else:
+        history = db.query(Prediction).limit(limit).all()
+    return history
