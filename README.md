@@ -24,9 +24,7 @@ The goal of the project is to use this dataset to train a model that can predict
 ## Endpoints
 * [x] `/models`: Returns list of available models and their properties
 * [x] `/predict`: Accepts a transaction data and returns the prediction of whether it is a fraud or not.
-* [ ] `/history`: Retrieves the history of transactions and results for given period.
-* [ ] `/status`: Returns the status of the API.
-* [ ] `/info`: Returns information about the API.
+* [x] `/history`: Retrieves the history of transactions and results for given period.
 * [ ] `/train`: Train new model with specified parameters
 
 

@@ -214,17 +214,11 @@ def get_history(
         )
     elif start_date:
         history = (
-            db.query(Prediction)
-            .filter(Prediction.ts >= start_date)
-            .limit(limit)
-            .all()
+            db.query(Prediction).filter(Prediction.ts >= start_date).limit(limit).all()
         )
     elif end_date:
         history = (
-            db.query(Prediction)
-            .filter(Prediction.ts <= end_date)
-            .limit(limit)
-            .all()
+            db.query(Prediction).filter(Prediction.ts <= end_date).limit(limit).all()
         )
     elif model_to_use:
         history = (

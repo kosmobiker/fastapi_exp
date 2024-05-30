@@ -44,6 +44,7 @@ def predict(
     predictions = crud.predict_fraud(transaction, db, model_to_use)
     return predictions
 
+
 @app.get("/history/")
 def history(
     start_date: datetime = None,
