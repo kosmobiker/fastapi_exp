@@ -1,13 +1,23 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 from uuid import uuid4
 from fastapi.testclient import TestClient
 import pytest
-from sqlalchemy import MetaData, Table, create_engine, delete, text
+from sqlalchemy import (
+    MetaData,
+    String,
+    Table,
+    cast,
+    create_engine,
+    delete,
+    select,
+    text,
+)
 
+from src.api.database import CONNECTION_STRING
 from src.api.main import app
-from src.db.db_utils import CONNECTION_STRING, SCHEMA, insert_values_into_table
+from src.db.db_utils import SCHEMA, insert_values_into_table
 from src.train.trainer import DEFAULT_MODEL, split_dataframes, train_model
 from tests.functional.test_train import _fake_get_data
 
@@ -297,3 +307,41 @@ def test_predict_fraud_default_lightgbm_model_multi_tx():
     assert all(result["prediction_label"]) in [0, 1]
     assert 0 <= all(result["prediction_proba"]) <= 1
     assert result["model_used"] == use_model
+
+
+def test_saves_preds_into_database():
+    # Given
+    num_transactions = 1
+    transaction_json = (
+        _fake_get_data(num_transactions)
+        .drop(["fraud_bool"], axis=1)
+        .to_dict(orient="records")
+    )
+
+    # When
+    response = client.post("/predict/", json=transaction_json)
+
+    # Then
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["model_used"] == DEFAULT_MODEL
+
+    # Check if the prediction was saved in the database
+    engine = create_engine(CONNECTION_STRING)
+    conn = engine.connect()
+    with conn.begin():
+        metadata = MetaData()
+        table = Table("predictions", metadata, autoload_with=engine)
+        stmt = select(table).where(
+            (cast(table.c.input_data, String) == json.dumps(transaction_json))
+            & (table.c.ts > datetime.now() - timedelta(seconds=10))
+        )
+        result = conn.execute(stmt).fetchone()
+        id_to_delete = result[0]
+        print(result, "this is a result")
+        assert result is not None
+        assert result[1] == DEFAULT_MODEL
+        assert result[3] == transaction_json
+        delete_stmt = delete(table).where(table.c.id == id_to_delete)
+        conn.execute(delete_stmt)

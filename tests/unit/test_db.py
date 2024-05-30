@@ -8,10 +8,10 @@ from sqlalchemy import (
     select,
     delete,
 )
+from src.api.database import CONNECTION_STRING
 from src.db.db_utils import (
     crete_database_schemas_tables,
     insert_values_into_table,
-    CONNECTION_STRING,
     SCHEMA,
     TABLE_LIST,
 )

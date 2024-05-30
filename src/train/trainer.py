@@ -31,6 +31,7 @@ from sklearn.model_selection import (
 )
 from sklearn.pipeline import Pipeline, make_pipeline
 
+from src.api.database import CONNECTION_STRING
 from src.train.transform import (
     COLS_MISSING_NEG,
     COLS_MISSING_NEG1,
@@ -49,7 +50,7 @@ from src.train.transform import (
     MissingValueFiller,
 )
 from src.train.utils import get_data
-from src.db.db_utils import insert_values_into_table, CONNECTION_STRING, SCHEMA
+from src.db.db_utils import insert_values_into_table, SCHEMA
 
 PATH_TO_DATA = "data/Base.csv"
 SEED = 42

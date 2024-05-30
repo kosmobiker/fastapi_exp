@@ -5,8 +5,8 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sqlalchemy import MetaData, Table, create_engine, delete, select
 
+from src.api.database import CONNECTION_STRING
 from src.db.db_utils import (
-    CONNECTION_STRING,
     SCHEMA,
     TABLE_LIST,
     crete_database_schemas_tables,

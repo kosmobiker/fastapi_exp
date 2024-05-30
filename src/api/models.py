@@ -1,9 +1,13 @@
 from sqlalchemy import (
+    ARRAY,
     JSON,
     UUID,
     Column,
     DateTime,
+    Double,
     Float,
+    Integer,
+    PickleType,
     String,
 )
 
@@ -23,3 +27,14 @@ class TrainedModels(Base):
     roc_auc_test = Column(Float)
     recall_test = Column(Float)
     model_path = Column(String)
+
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+
+    id = Column(UUID, primary_key=True)
+    model_name = Column(String)
+    ts = Column(DateTime)
+    input_data = Column(JSON)
+    prediction_label = Column(ARRAY(Integer))
+    prediction_proba = Column(ARRAY(Double))

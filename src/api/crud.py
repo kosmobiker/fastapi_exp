@@ -1,13 +1,14 @@
 from datetime import datetime
 from io import StringIO
 import pickle
+from uuid import uuid4
 import lightgbm as lgb
 import joblib
 import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from src.api.models import TrainedModels
+from src.api.models import Prediction, TrainedModels
 from src.train.trainer import DEFAULT_MODEL
 from src.api.schemas import TransactionBase
 
@@ -69,8 +70,7 @@ def predict_fraud(
         .first()
     )
     if model is None:
-        response = {"error": "No model found"}
-        return response
+        return {"error": "No model found"}
 
     model_id, model_type = model.model_id, model.model_type
     if model_type == "Logistic Regression":
@@ -88,8 +88,14 @@ def predict_fraud(
             "prediction_proba": prediction_proba[:, 0].tolist(),
             "model_used": model_to_use,
         }
-
-        return response
+        prediction_record = Prediction(
+            id=uuid4(),
+            model_name=model_to_use,
+            ts=datetime.now(),
+            input_data=transactions_dict,
+            prediction_label=prediction.tolist(),
+            prediction_proba=prediction_proba[:, 0].tolist(),
+        )
 
     elif model_type == "LightGBM":
         preprocessor_path = f"./models/{model_id}_preproc.pkl"
@@ -109,7 +115,17 @@ def predict_fraud(
             "prediction_proba": prediction_proba.tolist(),
             "model_used": model_to_use,
         }
-
-        return response
+        prediction_record = Prediction(
+            id=uuid4(),
+            model_name=model_to_use,
+            ts=datetime.now(),
+            input_data=transactions_dict,
+            prediction_label=prediction,
+            prediction_proba=prediction_proba.tolist(),
+        )
     else:
         response = {"error": f"Model type {model_type} not supported"}
+
+    db.add(prediction_record)
+    db.commit()
+    return response
