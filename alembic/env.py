@@ -15,7 +15,7 @@ config = context.config
 config.set_main_option('sqlalchemy.url', os.getenv('NEON_DEV_URL', ""))
 
 
-from fastapi_exp.models import Base
+from fastapi_exp.database import Base
 
 target_metadata = Base.metadata
 

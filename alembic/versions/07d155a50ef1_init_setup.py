@@ -54,7 +54,6 @@ def upgrade() -> None:
     sa.Column('has_other_cards', sa.Boolean(), nullable=False, comment='Has other cards from same bank'),
     sa.Column('foreign_request', sa.Boolean(), nullable=False, comment='Request from different country'),
     sa.Column('keep_alive_session', sa.Boolean(), nullable=False, comment='Session logout option'),
-    sa.Column('fraud_bool', sa.Boolean(), nullable=False, comment='Fraudulent application flag'),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')

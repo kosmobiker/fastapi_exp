@@ -15,8 +15,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from database import Base
 
-Base = declarative_base()
 
 class FeatureStore(Base):
     __tablename__ = "feature_store"
@@ -60,14 +60,13 @@ class FeatureStore(Base):
     has_other_cards = Column(Boolean, nullable=False, comment="Has other cards from same bank")
     foreign_request = Column(Boolean, nullable=False, comment="Request from different country")
     keep_alive_session = Column(Boolean, nullable=False, comment="Session logout option")
-    fraud_bool = Column(Boolean, nullable=False, comment="Fraudulent application flag")
     
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def __repr__(self):
-        return f"<FeatureStore(id={self.id}, customer_age={self.customer_age}, fraud_bool={self.fraud_bool})>"
+        return f"<FeatureStore(id={self.id}, customer_age={self.customer_age}>"
     
     def to_dict(self):
         """Convert model to dictionary for API responses"""
@@ -104,7 +103,6 @@ class FeatureStore(Base):
             'device_distinct_emails': self.device_distinct_emails,
             'device_fraud_count': self.device_fraud_count,
             'month': self.month,
-            'fraud_bool': self.fraud_bool,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -164,16 +162,12 @@ class Predictions(Base):
             'model_version': self.model_version,
             'model_type': self.model_type,
             'prediction_time_ms': self.prediction_time_ms,
-            'feature_importance': self.feature_importance,
-            'shap_values': self.shap_values,
             'risk_category': self.risk_category,
             'action_recommended': self.action_recommended,
             'is_validated': self.is_validated,
             'actual_fraud': self.actual_fraud,
             'validation_date': self.validation_date.isoformat() if self.validation_date else None,
             'validation_source': self.validation_source,
-            'prediction_batch_id': self.prediction_batch_id,
-            'notes': self.notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
