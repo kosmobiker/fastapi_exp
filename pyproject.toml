@@ -17,7 +17,6 @@ dependencies = [
     "psycopg2-binary>=2.9.6",
     "pydantic>=2.1.1",
     "pydantic-settings>=2.0.2",
-    "feast>=0.32.1",
     "xgboost>=1.7.6",
     "newrelic>=8.8.0",
     "python-jose[cryptography]>=3.3.0",
@@ -25,6 +24,8 @@ dependencies = [
     "python-multipart>=0.0.6",
     "emails>=0.6",
     "numpy>=1.26.0",
+    "pandas",
+    "scikit-learn"
 ]
 
 [project.optional-dependencies]
