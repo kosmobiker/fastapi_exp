@@ -13,7 +13,7 @@ from tqdm import tqdm
 import uuid
 
 # Import your models
-from models import Base, FeatureStore
+from fastapi_exp.models.models import Base, FeatureStore
 
 # Configure logging
 logging.basicConfig(
