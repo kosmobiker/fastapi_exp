@@ -15,7 +15,7 @@ build:
 
 .PHONY: run
 run:
-	@docker run -d -p 8000:8000 --name fastapi_exp fastapi_exp
+	@docker run -d -p 8000:8000 --name fastapi_exp -e NEON_DEV_URL fastapi_exp
 
 .PHONY: stop
 stop:
