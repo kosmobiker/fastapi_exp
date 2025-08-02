@@ -1,34 +1,48 @@
-.PHONY: setup
-setup:
-	export PYTHONPATH="$$PYTHONPATH:$$PWD"
-	pipenv	install
-	@echo $$PYTHONPATH
-	@echo $$PWD
-.PHONY: docker
-docker:
-	docker build -t my_postgres_image .
-	docker run -d -p 5432:5432 --name my_postgres_container my_postgres_image
-.PHONY: fmt
-fmt:
-	pipenv run black	src/
-	pipenv run black	tests/
+SHELL := /bin/bash
+
+.PHONY: help
+help:
+	@echo "Commands:"
+	@echo "  build         : Build the Docker image"
+	@echo "  run           : Run the Docker container"
+	@echo "  stop          : Stop the Docker container"
+	@echo "  test          : Run tests inside the Docker container"
+	@echo "  lint          : Lint the code inside the Docker container"
+
+.PHONY: build
+build:
+	@docker build -t fastapi_exp .
+
+.PHONY: run
+run:
+	@docker run -d -p 8000:8000 --name fastapi_exp fastapi_exp
+
+.PHONY: stop
+stop:
+	@docker stop fastapi_exp
+
+.PHONY: clean
+clean:
+	@docker rm fastapi_exp
+
 .PHONY: test
 test:
-	pipenv run pytest	-v
-.PHONY: coverage
-coverage:
-	pipenv run pytest --cov=src --cov-fail-under=80 --cov-report term-missing
-	rm -f .coverage*
-	rm -rf htmlcov/
-.PHONY: pylint
-pylint:
-	pipenv run pylint src/ tests/ --fail-under=8.0
-.PHONY: train
-train:
-		pipenv run python	src/train/trainer.py
-		pipenv run python	src/train/trainer.py --model_name=TestLightGBMModel --model_type=lightgbm
+	@docker exec fastapi_exp pytest
+
+.PHONY: ci-test
+ci-test:
+	@pytest --cov=fastapi_exp --cov-report=term-missing --cov-fail-under=85
+
+.PHONY: lint
+lint:
+	@docker exec fastapi_exp ruff . --fix
+
+.PHONY: ci-lint
+ci-lint:
+	@ruff . --fix
+
 .PHONY: verify
-verify: fmt test coverage pylint
-.PHONY: fastapi
-fastapi:
-	pipenv run fastapi dev src/api/main.py --reload
+verify: lint test
+
+.PHONY: ci-verify
+ci-verify: ci-lint ci-test
