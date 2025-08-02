@@ -24,8 +24,9 @@ dependencies = [
     "python-multipart>=0.0.6",
     "emails>=0.6",
     "numpy>=1.26.0",
-    "pandas",
-    "scikit-learn"
+    "python-dotenv>=1.1.1",
+    "pandas>=2.3.1",
+    "scikit-learn>=1.7.1",
 ]
 
 [project.optional-dependencies]
