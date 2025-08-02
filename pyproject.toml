@@ -24,6 +24,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "python-multipart>=0.0.6",
     "emails>=0.6",
+    "numpy>=1.26.0",
 ]
 
 [project.optional-dependencies]
