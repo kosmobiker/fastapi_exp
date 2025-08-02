@@ -172,28 +172,34 @@ class Predictions(Base):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
     
-    def get_risk_level(self) -> str:
-        """Determine risk level based on fraud probability"""
-        if self.fraud_probability >= 0.8:
-            return "CRITICAL"
-        elif self.fraud_probability >= 0.6:
-            return "HIGH"
-        elif self.fraud_probability >= 0.3:
-            return "MEDIUM"
-        else:
-            return "LOW"
-    
-    def get_recommended_action(self) -> str:
-        """Get recommended action based on prediction and probability"""
-        if self.predicted_fraud and self.fraud_probability >= 0.7:
+    @classmethod
+    def from_pipeline(cls, feature_store_id, prob, model_name, version, model_type, prediction_time_ms=None):
+        predicted_fraud = prob > 0.5
+        instance = cls(
+            feature_store_id=feature_store_id,
+            predicted_fraud=predicted_fraud,
+            fraud_probability=prob,
+            confidence_score=prob,
+            model_name=model_name,
+            model_version=version,
+            model_type=model_type,
+            prediction_time_ms=prediction_time_ms,
+            risk_category=cls.estimate_risk(prob),
+            action_recommended=cls.recommend_action(predicted_fraud, prob),
+        )
+        return instance
+
+    @staticmethod
+    def estimate_risk(prob):
+        if prob >= 0.8: return "CRITICAL"
+        elif prob >= 0.6: return "HIGH"
+        elif prob >= 0.3: return "MEDIUM"
+        else: return "LOW"
+
+    @staticmethod
+    def recommend_action(predicted_fraud, prob):
+        if predicted_fraud and prob >= 0.7:
             return "REJECT"
-        elif self.predicted_fraud and self.fraud_probability >= 0.4:
+        elif predicted_fraud and prob >= 0.4:
             return "REVIEW"
-        else:
-            return "APPROVE"
-    
-    def calculate_accuracy(self) -> float:
-        """Calculate accuracy if actual result is available"""
-        if self.actual_fraud is None:
-            return None
-        return 1.0 if self.predicted_fraud == self.actual_fraud else 0.0
+        return "APPROVE"
