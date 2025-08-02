@@ -37,6 +37,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "locust>=2.16.1",
     "ruff>=0.1.6",
+    "httpx>=0.27.0",
 ]
 
 [build-system]
@@ -75,7 +76,7 @@ convention = "google"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q -v --cov=app --cov-report=term-missing"
+addopts = "-ra -q -v --cov=fastapi_exp --cov-report=term-missing --cov-fail-under=85"
 testpaths = [
     "tests",
 ]
