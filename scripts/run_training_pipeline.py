@@ -13,23 +13,21 @@ Usage:
     python complete_pipeline.py [--input-file Base.csv] [--target fraud_bool]
 """
 
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 from pathlib import Path
-import pandas as pd
-import numpy as np
+
 import joblib
-from typing import Tuple, Dict, Any
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix
+import pandas as pd
 import xgboost as xgb
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from xgboost import DMatrix
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -55,7 +53,7 @@ class FraudDetectionPipeline:
             logger.info(f"✅ Loaded data with shape: {df.shape}")
             
             # Display basic info
-            logger.info(f"📊 Dataset info:")
+            logger.info("📊 Dataset info:")
             logger.info(f"   - Total samples: {len(df):,}")
             logger.info(f"   - Total features: {df.shape[1]}")
             logger.info(f"   - Memory usage: {df.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
@@ -63,7 +61,7 @@ class FraudDetectionPipeline:
             # Show missing values
             missing_info = df.isnull().sum()
             if missing_info.sum() > 0:
-                logger.info(f"⚠️  Missing values found:")
+                logger.info("⚠️  Missing values found:")
                 for col, missing_count in missing_info[missing_info > 0].items():
                     pct = (missing_count / len(df)) * 100
                     logger.info(f"   - {col}: {missing_count} ({pct:.1f}%)")
@@ -100,20 +98,20 @@ class FraudDetectionPipeline:
         
         logger.info("✅ Data validation passed")
     
-    def preprocess_data(self, df: pd.DataFrame, target_column: str) -> Tuple[pd.DataFrame, pd.Series]:
+    def preprocess_data(self, df: pd.DataFrame, target_column: str) -> tuple[pd.DataFrame, pd.Series]:
         """Complete preprocessing pipeline."""
         logger.info("🔧 Starting data preprocessing...")
         
         # Separate features and target
-        X = df.drop(columns=[target_column])
+        x = df.drop(columns=[target_column])
         y = df[target_column]
         
         # Identify column types
-        numeric_cols = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
-        categorical_cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
-        boolean_cols = X.select_dtypes(include=['bool']).columns.tolist()
+        numeric_cols = x.select_dtypes(include=['int64', 'float64']).columns.tolist()
+        categorical_cols = x.select_dtypes(include=['object', 'category']).columns.tolist()
+        boolean_cols = x.select_dtypes(include=['bool']).columns.tolist()
         
-        logger.info(f"📋 Feature types identified:")
+        logger.info("📋 Feature types identified:")
         logger.info(f"   - Numeric: {len(numeric_cols)} columns")
         logger.info(f"   - Categorical: {len(categorical_cols)} columns") 
         logger.info(f"   - Boolean: {len(boolean_cols)} columns")
@@ -123,7 +121,7 @@ class FraudDetectionPipeline:
             'numeric_columns': numeric_cols,
             'categorical_columns': categorical_cols,
             'boolean_columns': boolean_cols,
-            'feature_names': X.columns.tolist(),
+            'feature_names': x.columns.tolist(),
             'target_column': target_column
         }
         
@@ -133,14 +131,14 @@ class FraudDetectionPipeline:
         # Numeric imputation
         if numeric_cols:
             numeric_imputer = SimpleImputer(strategy='median')  # More robust than mean
-            X[numeric_cols] = numeric_imputer.fit_transform(X[numeric_cols])
+            x[numeric_cols] = numeric_imputer.fit_transform(x[numeric_cols])
             self.preprocessors['numeric_imputer'] = numeric_imputer
             logger.info(f"   ✅ Imputed {len(numeric_cols)} numeric columns with median")
         
         # Categorical imputation
         if categorical_cols:
             categorical_imputer = SimpleImputer(strategy='most_frequent')
-            X[categorical_cols] = categorical_imputer.fit_transform(X[categorical_cols])
+            x[categorical_cols] = categorical_imputer.fit_transform(x[categorical_cols])
             self.preprocessors['categorical_imputer'] = categorical_imputer
             logger.info(f"   ✅ Imputed {len(categorical_cols)} categorical columns with mode")
         
@@ -150,7 +148,7 @@ class FraudDetectionPipeline:
         
         for col in categorical_cols:
             le = LabelEncoder()
-            X[col] = le.fit_transform(X[col].astype(str))
+            x[col] = le.fit_transform(x[col].astype(str))
             label_encoders[col] = le
             
             n_categories = len(le.classes_)
@@ -162,20 +160,20 @@ class FraudDetectionPipeline:
         if numeric_cols:
             logger.info("🔧 Scaling numeric features...")
             scaler = StandardScaler()
-            X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+            x[numeric_cols] = scaler.fit_transform(x[numeric_cols])
             self.preprocessors['scaler'] = scaler
             logger.info(f"   ✅ Scaled {len(numeric_cols)} numeric columns")
         
         # Convert boolean columns to int
         if boolean_cols:
-            X[boolean_cols] = X[boolean_cols].astype(int)
+            x[boolean_cols] = x[boolean_cols].astype(int)
             logger.info(f"   ✅ Converted {len(boolean_cols)} boolean columns to int")
         
         logger.info("✅ Preprocessing completed")
-        return X, y
+        return x, y
     
-    def split_data(self, X: pd.DataFrame, y: pd.Series, 
-                   train_size: float = 0.6, val_size: float = 0.2, test_size: float = 0.2) -> Dict[str, Tuple]:
+    def split_data(self, x: pd.DataFrame, y: pd.Series, 
+                   train_size: float = 0.6, val_size: float = 0.2, test_size: float = 0.2) -> dict[str, tuple]:
         """Split data into train/validation/test sets."""
         logger.info("✂️  Splitting data...")
         
@@ -184,8 +182,8 @@ class FraudDetectionPipeline:
             raise ValueError("Split ratios must sum to 1.0")
         
         # First split: separate test set
-        X_temp, X_test, y_temp, y_test = train_test_split(
-            X, y, 
+        x_temp, x_test, y_temp, y_test = train_test_split(
+            x, y, 
             test_size=test_size, 
             random_state=self.random_state,
             stratify=y
@@ -193,38 +191,38 @@ class FraudDetectionPipeline:
         
         # Second split: separate train and validation
         val_ratio = val_size / (train_size + val_size)
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_temp, y_temp,
+        x_train, x_val, y_train, y_val = train_test_split(
+            x_temp, y_temp,
             test_size=val_ratio,
             random_state=self.random_state,
             stratify=y_temp
         )
         
         splits = {
-            'train': (X_train, y_train),
-            'val': (X_val, y_val),
-            'test': (X_test, y_test)
+            'train': (x_train, y_train),
+            'val': (x_val, y_val),
+            'test': (x_test, y_test)
         }
         
         # Log split information
-        total_samples = len(X)
-        logger.info(f"📊 Data split completed:")
-        for split_name, (X_split, y_split) in splits.items():
-            count = len(X_split)
+        total_samples = len(x)
+        logger.info("📊 Data split completed:")
+        for split_name, (x_split, y_split) in splits.items():
+            count = len(x_split)
             pct = (count / total_samples) * 100
             fraud_pct = (y_split.sum() / len(y_split)) * 100
             logger.info(f"   - {split_name.capitalize()}: {count:,} samples ({pct:.1f}%) - {fraud_pct:.1f}% fraud")
         
         return splits
     
-    def train_model(self, X_train: pd.DataFrame, y_train: pd.Series, 
-                    X_val: pd.DataFrame, y_val: pd.Series) -> xgb.Booster:
+    def train_model(self, x_train: pd.DataFrame, y_train: pd.Series, 
+                    x_val: pd.DataFrame, y_val: pd.Series) -> xgb.Booster:
         """Train XGBoost model with hyperparameter optimization."""
         logger.info("🚀 Training XGBoost model...")
         
         # Convert to DMatrix
-        dtrain = DMatrix(X_train, label=y_train)
-        dval = DMatrix(X_val, label=y_val)
+        dtrain = DMatrix(x_train, label=y_train)
+        dval = DMatrix(x_val, label=y_val)
         
         # XGBoost parameters (optimized for fraud detection)
         params = {
@@ -268,17 +266,17 @@ class FraudDetectionPipeline:
         
         return model
     
-    def evaluate_model(self, splits: Dict[str, Tuple]) -> Dict[str, Dict]:
+    def evaluate_model(self, splits: dict[str, tuple]) -> dict[str, dict]:
         """Comprehensive model evaluation."""
         logger.info("📊 Evaluating model performance...")
         
         evaluation_results = {}
         
-        for split_name, (X_split, y_split) in splits.items():
+        for split_name, (x_split, y_split) in splits.items():
             logger.info(f"   📈 Evaluating on {split_name} set...")
             
             # Make predictions
-            dmatrix = DMatrix(X_split)
+            dmatrix = DMatrix(x_split)
             y_prob = self.model.predict(dmatrix)
             y_pred = (y_prob > 0.5).astype(int)
             
@@ -321,7 +319,7 @@ class FraudDetectionPipeline:
         
         return evaluation_results
     
-    def save_artifacts(self, output_dir: str, evaluation_results: Dict) -> None:
+    def save_artifacts(self, output_dir: str, evaluation_results: dict) -> None:
         """Save model, preprocessors, and evaluation results."""
         logger.info(f"💾 Saving artifacts to {output_dir}...")
         
@@ -353,7 +351,7 @@ class FraudDetectionPipeline:
         
         logger.info("✅ All artifacts saved successfully")
     
-    def _save_summary_report(self, output_path: Path, evaluation_results: Dict) -> None:
+    def _save_summary_report(self, output_path: Path, evaluation_results: dict) -> None:
         """Save a human-readable summary report."""
         report_path = output_path / "model_summary.txt"
         
@@ -381,7 +379,7 @@ class FraudDetectionPipeline:
                 f.write(f"  F1-Score: {results['f1_score']:.4f}\n")
                 
                 cm = results['confusion_matrix']
-                f.write(f"  Confusion Matrix:\n")
+                f.write("  Confusion Matrix:\n")
                 f.write(f"    TN: {cm['true_negative']:,}, FP: {cm['false_positive']:,}\n")
                 f.write(f"    FN: {cm['false_negative']:,}, TP: {cm['true_positive']:,}\n")
         
@@ -406,15 +404,15 @@ class FraudDetectionPipeline:
             self.validate_data(df, target_column)
             
             # 3. Preprocess data
-            X, y = self.preprocess_data(df, target_column)
+            x, y = self.preprocess_data(df, target_column)
             
             # 4. Split data
-            splits = self.split_data(X, y)
+            splits = self.split_data(x, y)
             
             # 5. Train model
-            X_train, y_train = splits['train']
-            X_val, y_val = splits['val']
-            self.train_model(X_train, y_train, X_val, y_val)
+            x_train, y_train = splits['train']
+            x_val, y_val = splits['val']
+            self.train_model(x_train, y_train, x_val, y_val)
             
             # 6. Evaluate model
             evaluation_results = self.evaluate_model(splits)
@@ -423,7 +421,7 @@ class FraudDetectionPipeline:
             self.save_artifacts(output_dir, evaluation_results)
 
             # 8 Prepare features for DB storage
-            prepared_features = self.prepare_features_for_db(X)
+            prepared_features = self.prepare_features_for_db(x)
             prepared_features_path = Path(output_dir) / "prepared_features.csv"
             prepared_features.to_csv(prepared_features_path, index=False)
 
@@ -433,7 +431,7 @@ class FraudDetectionPipeline:
             # Show final results
             val_auc = evaluation_results['val']['auc']
             test_auc = evaluation_results['test']['auc']
-            logger.info(f"🏆 Final Results:")
+            logger.info("🏆 Final Results:")
             logger.info(f"   - Validation AUC: {val_auc:.4f}")
             logger.info(f"   - Test AUC: {test_auc:.4f}")
             

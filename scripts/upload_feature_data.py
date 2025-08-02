@@ -1,16 +1,13 @@
+import argparse
+import logging
 import os
 import sys
-import argparse
+import uuid
+
 import pandas as pd
-import numpy as np
-from pathlib import Path
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-import logging
-from typing import Optional
 from tqdm import tqdm
-import uuid
 
 # Import your models
 from fastapi_exp.models.models import Base, FeatureStore
@@ -32,7 +29,7 @@ class DataUploader:
         """Test database connection."""
         try:
             with self.engine.connect() as conn:
-                result = conn.execute(text("SELECT 1"))
+                conn.execute(text("SELECT 1"))
                 logger.info("✅ Database connection successful")
                 return True
         except Exception as e:
@@ -48,7 +45,7 @@ class DataUploader:
             logger.error(f"❌ Error creating tables: {e}")
             raise
     
-    def load_and_validate_data(self, csv_path: str, max_records: Optional[int] = None) -> pd.DataFrame:
+    def load_and_validate_data(self, csv_path: str, max_records: int | None = None) -> pd.DataFrame:
         """Load and validate the CSV data."""
         try:
             # Load data

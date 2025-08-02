@@ -2,9 +2,8 @@ import os
 
 import dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-
+from sqlalchemy.orm import sessionmaker
 
 dotenv.load_dotenv()
 SQLALCHEMY_DATABASE_URL = os.getenv("NEON_DEV_URL")

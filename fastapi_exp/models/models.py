@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     Column,
     DateTime,
@@ -10,11 +9,10 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Text,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+
 from fastapi_exp.core.database import Base
 
 
@@ -191,10 +189,14 @@ class Predictions(Base):
 
     @staticmethod
     def estimate_risk(prob):
-        if prob >= 0.8: return "CRITICAL"
-        elif prob >= 0.6: return "HIGH"
-        elif prob >= 0.3: return "MEDIUM"
-        else: return "LOW"
+        if prob >= 0.8:
+            return "CRITICAL"
+        elif prob >= 0.6:
+            return "HIGH"
+        elif prob >= 0.3:
+            return "MEDIUM"
+        else:
+            return "LOW"
 
     @staticmethod
     def recommend_action(predicted_fraud, prob):
