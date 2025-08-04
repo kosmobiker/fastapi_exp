@@ -1,7 +1,10 @@
-from sqlalchemy import Column, TIMESTAMP, func, JSON, String
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
+
+from sqlalchemy import JSON, TIMESTAMP, Column, String, func
+from sqlalchemy.dialects.postgresql import UUID
+
 from app.db.base import Base
+
 
 class FeatureStore(Base):
     __tablename__ = "feature_store"

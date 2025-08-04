@@ -1,6 +1,11 @@
-def main():
-    print("Hello from fastapi-exp!")
+from fastapi import FastAPI
+
+from app.api.router import api_router
+
+app = FastAPI(title="ML Inference API")
+app.include_router(api_router)
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/healthcheck")
+def healthcheck():
+    return {"status": "ok"}

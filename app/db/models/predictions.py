@@ -1,6 +1,8 @@
-from sqlalchemy import Column, ForeignKey, Integer, Float, String, TIMESTAMP, func
+from sqlalchemy import TIMESTAMP, Column, Float, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
+
 from app.db.base import Base
+
 
 class Prediction(Base):
     __tablename__ = "predictions"
