@@ -59,12 +59,11 @@
 
 11. Design Feature Store DB Tables
 - ✅ What: Create table for features
-- upload data to Neon database
 - Configure SQLAlchemy + Alembic
 - Initialize Alembic: `alembic init alembic`
 - Run migration
 - Insert Transformed Features
-    - Use SQLAlchemy or asyncpg to insert rows into feature_store
+    - Use SQLAlchemy or asyncpg to insert rows into feature_stor
 
 # 🧪 PHASE 4: Testing
 12. Write Tests
