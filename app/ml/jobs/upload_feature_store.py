@@ -3,6 +3,9 @@ import argparse
 import os
 import sys
 
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=".env.test")
+
 import numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -27,12 +30,10 @@ def main():
     )
     args = parser.parse_args()
 
-    neon_url = os.getenv("NEON_URL_PROD")
-    if not neon_url:
-        print("Error: NEON_URL_PROD environment variable is not set.", file=sys.stderr)
-        sys.exit(1)
+    database_url = os.environ["DATABASE_URL"]
+    # DATABASE_URL must be set in environment for local Postgres
 
-    engine = create_engine(neon_url)
+    engine = create_engine(database_url)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
 

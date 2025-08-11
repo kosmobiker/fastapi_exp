@@ -16,7 +16,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Load DB URL from env
-DATABASE_URL = os.environ["NEON_URL_PROD"]
+DATABASE_URL = os.environ["DATABASE_URL"]
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 target_metadata = Base.metadata
