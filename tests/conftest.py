@@ -1,18 +1,24 @@
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.db.base import Base
-from app.db.models.feature_store import FeatureStore
-import uuid
 import os
-import json
 import random
 import uuid
+from datetime import datetime
 
-TEST_DB_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://test_user:test_pass@localhost:5433/test_db")
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.db.base import Base
+from app.db.models.feature_store import FeatureStore
+from app.main import app
+
+TEST_DB_URL = os.getenv(
+    "DATABASE_URL", "postgresql+psycopg2://test_user:test_pass@localhost:5433/test_db"
+)
 
 engine = create_engine(TEST_DB_URL)
 TestingSessionLocal = sessionmaker(bind=engine)
+
 
 def generate_synthetic_user(user_id=None):
     return {
@@ -50,8 +56,17 @@ def generate_synthetic_user(user_id=None):
             "device_fraud_count": random.randint(0, 3),
             "month": random.randint(1, 12),
         },
-        "version": "v1"
+        "created_at": datetime.now(),
+        "version": "v1",
     }
+
+
+@pytest.fixture
+def db_session():
+    session = TestingSessionLocal()
+    yield session
+    session.close()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
@@ -64,7 +79,7 @@ def setup_database():
         fs = FeatureStore(
             id=user_data["id"],
             features=user_data["features"],
-            version=user_data["version"]
+            version=user_data["version"],
         )
         db.add(fs)
 
@@ -72,3 +87,21 @@ def setup_database():
     db.close()
     yield
 
+
+@pytest.fixture(scope="module")
+def client():
+    """
+    Create a test client for the FastAPI app.
+    Scope is 'module' so it's created once per test module.
+    """
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture(scope="session")
+def app_instance():
+    """
+    Provide the FastAPI app instance for testing.
+    Scope is 'session' so it's created once per test session.
+    """
+    return app

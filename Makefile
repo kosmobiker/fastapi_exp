@@ -6,7 +6,7 @@ fmt:
 
 test:
 	docker-compose up -d test_db --wait
-	pytest --cov=app --cov-report=term --cov-fail-under=85
+	pytest --cov=app --cov-report=term-missing --cov-fail-under=85
 
 
 verify: fmt test
