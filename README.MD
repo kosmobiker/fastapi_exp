@@ -32,7 +32,7 @@
     - 💾 Save: model.pkl in data/model_artifacts/
 
 6. Evaluate Model
-✅ What: Evaluate on test set with:
+- ✅ What: Evaluate on test set with:
     - Accuracy, Precision, Recall, F1, ROC-AUC
     - Confusion Matrix
     - Feature Importance
@@ -40,112 +40,45 @@
 
 ### 📦 PHASE 2: Backend Project Setup
 7. Set Up Project Structure
- - ✅ What: Use the structure I gave you earlier
+- ✅ What: Use the structure I gave you earlier
     - 📁 Create folders: app/, tests/, data/, etc.
 
 8. Create Pydantic Schemas
-📁 app/schemas/predict.py
+- 📁 app/schemas/predict.py
 
 9. Write Model Inference Logic
-📁 app/ml/model.py
+- 📁 app/ml/model.py
 
 10. Implement FastAPI Endpoints
-/healthcheck: returns "ok"
+- `/healthcheck`: returns "ok"
+- `/predict/sync/{user_id}`: sync inference
+- `/predict/async/{user_id}`: async inference
 
-/predict/sync/{user_id}: sync inference
 
-/predict/async/{user_id}: async inference
+### 🗃️ PHASE 3: Feature Store (PostgreSQL)
 
-📁 In app/api/endpoints/ → Create health.py, predict.py
-
-📁 app/main.py
-
-🗃️ PHASE 3: Feature Store (PostgreSQL)
 11. Design Feature Store DB Tables
-feature_store: user_id, features (JSON or array), created_at
+- ✅ What: Create table for features
+- Configure SQLAlchemy + Alembic
+- Initialize Alembic: `alembic init alembic`
+- Run migration
+- Insert Transformed Features
+    - Use SQLAlchemy or asyncpg to insert rows into feature_stor
 
-predictions: user_id, prediction, timestamp
+# 🧪 PHASE 4: Testing
+12. Write Tests
+- ✅ Dummy data, no DB:
+- 📁 tests/test_model.py, tests/test_api.py
+- Write Integration Tests with Docker DB
+    - Use docker-compose service for PostgreSQL
+    - Test endpoints: predict/sync, predict/async
 
-📁 app/db/models/feature.py, prediction.py
+# 🐳 PHASE 5: Docker & Deployment
+13. Docker is a great way to package your app 
+- Create Dockerfile
+- Create docker-compose.yml
+- Test Docker Build
+    - Visit: http://localhost:8000/healthcheck
 
-12. Configure SQLAlchemy + Alembic
-DATABASE_URL in .env
-
-Initialize Alembic: alembic init alembic
-
-Create base.py and session.py
-
-Run migration:
-
-bash
-Copy
-Edit
-alembic revision --autogenerate -m "init"
-alembic upgrade head
-13. Insert Transformed Features
-Use SQLAlchemy or asyncpg to insert rows into feature_store
-
-🧪 PHASE 4: Testing
-14. Write Unit Tests
-✅ Dummy data, no DB:
-📁 tests/test_model.py, tests/test_api.py
-
-Example test:
-
-python
-Copy
-Edit
-def test_dummy_prediction():
-    features = [0.1] * 13
-    prediction = predict(features)
-    assert prediction in [0, 1]
-15. Write Integration Tests with Docker DB
-Use docker-compose service for PostgreSQL
-
-Test endpoints: predict/sync, predict/async
-
-🐳 PHASE 5: Docker & Deployment
-16. Create Dockerfile
-dockerfile
-Copy
-Edit
-FROM python:3.11
-
-WORKDIR /app
-COPY . /app
-RUN pip install -r requirements.txt
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-17. Create docker-compose.yml
-Includes:
-
-FastAPI app (web)
-
-PostgreSQL (db)
-
-Use .env for connection string
-
-18. Test Docker Build
-bash
-Copy
-Edit
-docker-compose up --build
-✅ Visit: http://localhost:8000/healthcheck
-
-🚀 PHASE 6: CI/CD with GitHub Actions
-19. Create .github/workflows/test.yml
-See earlier answer for template
-
-✅ Runs on each push, with Docker PostgreSQL and pytest
-
-🌐 PHASE 7: Neon (Cloud Feature Store)
-20. Create Neon DB
-Go to Neon.tech
-
-Create project → DB → copy connection string
-
-21. Update .env for Production
-env
-Copy
-Edit
-DATABASE_URL=postgresql+asyncpg://user:pass@<neon>.neon.tech/db
-✅ Use this in production only
+# 🚀 PHASE 6: CI/CD with GitHub Actions
+14. Create .github/workflows/test.yml

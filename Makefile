@@ -5,8 +5,9 @@ fmt:
 	ruff check --fix .
 
 test:
-	# Add your test command here later
-	@echo "Tests not implemented yet"
+	docker-compose up -d test_db --wait
+	pytest --cov=app --cov-report=term-missing --cov-fail-under=85
+
 
 verify: fmt test
 	@echo "Verification complete"
