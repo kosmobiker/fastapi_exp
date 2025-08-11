@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import sys
-import argparse
+
 import numpy as np
-from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from tqdm import tqdm
+
 from app.db.models.feature_store import FeatureStore
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -47,6 +50,7 @@ def main():
 
     session.close()
     print("Feature upload to Neon database complete.")
+
 
 if __name__ == "__main__":
     main()
